@@ -120,11 +120,15 @@ Env vars used by `07`: `IS_NPROC` (default 1), `IS_MAX_CELLS` (default 200).
 ## Setup (uv)
 
 ```bash
-# 1. Get the geneformer package (git-lfs clone, ~7 GB with weights) and apply
-#    the multi-backend (MPS/CUDA/ROCm) device patches:
+# 1. Get the geneformer package (git-lfs clone, ~7 GB with weights) into
+#    geneformer_hf/, then apply the multi-backend (MPS/CUDA/ROCm) device patches.
+#    IMPORTANT: the patch paths are relative to geneformer_hf/, so cd there
+#    first. Running `patch` from the repo root fails with "File to patch:".
 ./download.sh
-patch -p1 < patches/geneformer_multibackend.patch
-cp patches/device.py geneformer_hf/geneformer/device.py   # new file (untracked)
+cd geneformer_hf
+patch -p1 < ../patches/geneformer_multibackend.patch
+cp ../patches/device.py geneformer/device.py        # new file (untracked)
+cd ..
 
 # 2. Create env
 uv venv .venv --python 3.12
@@ -136,6 +140,11 @@ uv pip install --python .venv/bin/python "transformers==4.46.3"
 # in its dataset.map step (any nproc):
 uv pip install --python .venv/bin/python "datasets==4.0.0"
 ```
+
+> **Note on re-running setup:** `download.sh` is idempotent and re-uses an
+> existing `geneformer_hf/`. If you already applied the patch once, applying it
+> again fails with "patch does not apply" (it is already applied) — that is
+> expected. Skip the patch steps if `geneformer/device.py` already exists.
 
 > **Pinned versions:** `transformers==4.46.3` (5.x breaks `SpecialTokensMixin`)
 > and **`datasets==4.0.0`** (`datasets>=5` hangs `perturb_data`'s `dataset.map`

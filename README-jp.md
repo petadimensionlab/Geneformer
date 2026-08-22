@@ -114,6 +114,17 @@ num_proc=nproc)` で perturbation `Dataset` を構築します。3 つの別々�
 ## Setup (uv)
 
 ```bash
+# 1. Geneformer パッケージ(git-lfs クローン、重み込み ~7 GB)を geneformer_hf/ に
+#    取得し、マルチバックエンド(MPS/CUDA/ROCm)の device パッチを適用する。
+#    重要: パッチのパスは geneformer_hf/ 基準なので、先に cd すること。
+#    リポジトリ root から patch を実行すると "File to patch:" で止まります。
+./download.sh
+cd geneformer_hf
+patch -p1 < ../patches/geneformer_multibackend.patch
+cp ../patches/device.py geneformer/device.py        # 新規ファイル(未追跡)
+cd ..
+
+# 2. 環境作成
 uv venv .venv --python 3.12
 uv pip install --python .venv/bin/python -e geneformer_hf
 # geneformer は transformers==4.46 を要求(setup.py は範囲指定のため、
@@ -123,6 +134,11 @@ uv pip install --python .venv/bin/python "transformers==4.46.3"
 # dataset.map でハングする(任意 nproc):
 uv pip install --python .venv/bin/python "datasets==4.0.0"
 ```
+
+> **再実行時の注意:** `download.sh` は冪等で、既存の `geneformer_hf/` を
+> 再利用します。一度 patch を適用済みなら、再度適用すると
+> "patch does not apply"(適用済み)で失敗します — これは正常です。
+> `geneformer/device.py` が既に存在する場合は patch 手順をスキップしてください。
 
 > **固定バージョン:** `transformers==4.46.3`(5.x は `SpecialTokensMixin` が壊れる)
 > と **`datasets==4.0.0`**(`datasets>=5` は `perturb_data` の `dataset.map` が
