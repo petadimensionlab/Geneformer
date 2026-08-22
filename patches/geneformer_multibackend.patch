@@ -1,0 +1,372 @@
+diff --git a/geneformer/classifier.py b/geneformer/classifier.py
+index ee99a8a..e3865e1 100644
+--- a/geneformer/classifier.py
++++ b/geneformer/classifier.py
+@@ -67,6 +67,7 @@ from . import (
+ from . import classifier_utils as cu
+ from . import evaluation_utils as eu
+ from . import perturber_utils as pu
++from .device import get_device_obj
+ 
+ sns.set()
+ 
+@@ -1123,7 +1124,7 @@ class Classifier:
+                         param.requires_grad = False
+ 
+             if self.quantize is False:
+-                model = model.to("cuda:0")
++                model = model.to(get_device_obj())
+             return model
+ 
+         # create the trainer
+diff --git a/geneformer/emb_extractor.py b/geneformer/emb_extractor.py
+index d46ad46..55aa7e2 100644
+--- a/geneformer/emb_extractor.py
++++ b/geneformer/emb_extractor.py
+@@ -26,6 +26,7 @@ from tqdm.auto import trange
+ 
+ from . import TOKEN_DICTIONARY_FILE
+ from . import perturber_utils as pu
++from .device import empty_cache, get_device_obj
+ 
+ logger = logging.getLogger(__name__)
+ 
+@@ -98,7 +99,7 @@ def get_embs(
+         minibatch = filtered_input_data.select([i for i in range(i, max_range)])
+ 
+         max_len = int(max(minibatch["length"]))
+-        original_lens = torch.tensor(minibatch["length"], device="cuda")
++        original_lens = torch.tensor(minibatch["length"], device=get_device_obj())
+         minibatch.set_format(type="torch")
+ 
+         input_data_minibatch = minibatch["input_ids"]
+@@ -108,7 +109,7 @@ def get_embs(
+ 
+         with torch.no_grad():
+             outputs = model(
+-                input_ids=input_data_minibatch.to("cuda"),
++                input_ids=input_data_minibatch.to(get_device_obj()),
+                 attention_mask=pu.gen_attention_mask(minibatch),
+             )
+ 
+@@ -164,7 +165,7 @@ def get_embs(
+         del input_data_minibatch
+         del embs_i
+ 
+-        torch.cuda.empty_cache()
++        empty_cache()
+ 
+     if summary_stat is None:
+         if (emb_mode == "cell") or (emb_mode == "cls"):
+diff --git a/geneformer/evaluation_utils.py b/geneformer/evaluation_utils.py
+index 88f850c..e0a821f 100644
+--- a/geneformer/evaluation_utils.py
++++ b/geneformer/evaluation_utils.py
+@@ -22,6 +22,7 @@ from sklearn.metrics import (
+ from tqdm.auto import trange
+ 
+ from .emb_extractor import make_colorbar
++from .device import get_device_obj
+ 
+ logger = logging.getLogger(__name__)
+ 
+@@ -127,9 +128,9 @@ def classifier_predict(model, classifier_type, evalset, forward_batch_size, gene
+         label_batch = padded_batch[label_name]
+         with torch.no_grad():
+             outputs = model(
+-                input_ids=input_data_batch.to("cuda"),
+-                attention_mask=attn_msk_batch.to("cuda"),
+-                labels=label_batch.to("cuda"),
++                input_ids=input_data_batch.to(get_device_obj()),
++                attention_mask=attn_msk_batch.to(get_device_obj()),
++                labels=label_batch.to(get_device_obj()),
+             )
+             predict_logits += [torch.squeeze(outputs.logits.to("cpu"))]
+             predict_labels += [torch.squeeze(label_batch.to("cpu"))]
+diff --git a/geneformer/in_silico_perturber.py b/geneformer/in_silico_perturber.py
+index 35244c2..0c5afab 100644
+--- a/geneformer/in_silico_perturber.py
++++ b/geneformer/in_silico_perturber.py
+@@ -46,6 +46,7 @@ from tqdm.auto import trange
+ 
+ from . import TOKEN_DICTIONARY_FILE
+ from . import perturber_utils as pu
++from .device import empty_cache, get_device_obj
+ from .emb_extractor import get_embs
+ 
+ import datasets
+@@ -685,12 +686,12 @@ class InSilicoPerturber:
+                 if self.cell_states_to_model is not None:
+                     original_cell_emb = pu.mean_nonpadding_embs(
+                         full_original_emb,
+-                        torch.tensor(minibatch["length"], device="cuda"),
++                        torch.tensor(minibatch["length"], device=get_device_obj()),
+                         dim=1,
+                     )
+                     perturbation_cell_emb = pu.mean_nonpadding_embs(
+                         full_perturbation_emb,
+-                        torch.tensor(perturbation_batch["length"], device="cuda"),
++                        torch.tensor(perturbation_batch["length"], device=get_device_obj()),
+                         dim=1,
+                     )
+                     cell_cos_sims = pu.quant_cos_sims(
+@@ -745,7 +746,7 @@ class InSilicoPerturber:
+                 else:
+                     nonpadding_lens = perturbation_batch["length"]
+                 cos_sims_data = pu.mean_nonpadding_embs(
+-                    gene_cos_sims, torch.tensor(nonpadding_lens, device="cuda")
++                    gene_cos_sims, torch.tensor(nonpadding_lens, device=get_device_obj())
+                 )
+                 cos_sims_dict = self.update_perturbation_dictionary(
+                     cos_sims_dict,
+@@ -766,7 +767,7 @@ class InSilicoPerturber:
+             del perturbation_emb
+             del cos_sims_data
+ 
+-            torch.cuda.empty_cache()
++            empty_cache()
+ 
+         pu.write_perturbation_dictionary(
+             cos_sims_dict,
+@@ -1044,7 +1045,7 @@ class InSilicoPerturber:
+             del minibatch
+             del perturbation_batch
+ 
+-            torch.cuda.empty_cache()
++            empty_cache()
+ 
+         pu.write_perturbation_dictionary(
+             cos_sims_dict,
+@@ -1246,7 +1247,7 @@ class InSilicoPerturber:
+                     if self.emb_mode == "cell_and_gene":
+                         stored_gene_embs_dict = defaultdict(list)
+ 
+-                    torch.cuda.empty_cache()
++                    empty_cache()
+ 
+             pu.write_perturbation_dictionary(
+                 cos_sims_dict,
+@@ -1276,7 +1277,7 @@ class InSilicoPerturber:
+             del full_original_emb
+             if self.cell_states_to_model is not None:
+                 del original_cell_emb
+-            torch.cuda.empty_cache()
++            empty_cache()
+ 
+     def isp_perturb_all_special(
+         self,
+@@ -1530,7 +1531,7 @@ class InSilicoPerturber:
+                     if self.emb_mode == "cls_and_gene":
+                         stored_gene_embs_dict = defaultdict(list)
+ 
+-                    torch.cuda.empty_cache()
++                    empty_cache()
+ 
+             pu.write_perturbation_dictionary(
+                 cos_sims_dict,
+@@ -1560,7 +1561,7 @@ class InSilicoPerturber:
+             del original_cls_emb
+             if self.emb_mode == "cls_and_gene":
+                 del full_original_emb
+-            torch.cuda.empty_cache()
++            empty_cache()
+ 
+     def update_perturbation_dictionary(
+         self,
+diff --git a/geneformer/mtl/eval_utils.py b/geneformer/mtl/eval_utils.py
+index 29f9821..2fd1bac 100644
+--- a/geneformer/mtl/eval_utils.py
++++ b/geneformer/mtl/eval_utils.py
+@@ -5,6 +5,7 @@ import pandas as pd
+ 
+ from .data import prepare_test_loader
+ from .model import GeneformerMultiTask
++from ..device import get_device_obj
+ 
+ def evaluate_test_dataset(model, device, test_loader, cell_id_mapping, config):
+     task_pred_labels = {task_name: [] for task_name in config["task_names"]}
+@@ -49,7 +50,7 @@ def evaluate_test_dataset(model, device, test_loader, cell_id_mapping, config):
+ 
+ 
+ def load_and_evaluate_test_model(config):
+-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
++    device = get_device_obj()
+     test_loader, cell_id_mapping, num_labels_list = prepare_test_loader(config)
+     model_directory = os.path.join(config["model_save_path"], "GeneformerMultiTask")
+     hyperparams_path = os.path.join(model_directory, "hyperparameters.json")
+diff --git a/geneformer/mtl/train.py b/geneformer/mtl/train.py
+index 0e5ffa1..f3bbd1d 100644
+--- a/geneformer/mtl/train.py
++++ b/geneformer/mtl/train.py
+@@ -11,6 +11,7 @@ import functools
+ import time
+ 
+ from .model import GeneformerMultiTask
++from ..device import get_device_obj
+ from .utils import (
+     calculate_metrics,
+     get_layer_freeze_range,
+@@ -368,7 +369,7 @@ class Trainer:
+         if self.is_distributed:
+             self.device = torch.device(f"cuda:{self.local_rank}")
+         else:
+-            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
++            self.device = get_device_obj()
+         
+         self.model = create_model(self.config, num_labels_list, self.device)
+         
+diff --git a/geneformer/mtl/utils.py b/geneformer/mtl/utils.py
+index 1a59a63..32bb336 100644
+--- a/geneformer/mtl/utils.py
++++ b/geneformer/mtl/utils.py
+@@ -17,12 +17,13 @@ from torch.nn.parallel import DistributedDataParallel as DDP
+ import torch.multiprocessing as mp
+ from contextlib import contextmanager
+ 
++from ..device import get_device_obj, manual_seed_all
++
+ 
+ def set_seed(seed):
+     random.seed(seed)
+     np.random.seed(seed)
+-    torch.manual_seed(seed)
+-    torch.cuda.manual_seed_all(seed)
++    manual_seed_all(seed)
+     torch.backends.cudnn.deterministic = True
+     torch.backends.cudnn.benchmark = False
+ 
+@@ -219,7 +220,7 @@ def prepare_training_environment(config):
+ 
+     # Set up device - for non-distributed training
+     if not config.get("distributed_training", False):
+-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
++        device = get_device_obj()
+     else:
+         # For distributed training, device will be set per process
+         device = None
+@@ -438,7 +439,7 @@ def train_distributed(trainer_class, config, train_loader, val_loader, train_cel
+         print("Distributed training requested but only one GPU found. Falling back to single GPU training.")
+         config["distributed_training"] = False
+         trainer = trainer_class(config)
+-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
++        device = get_device_obj()
+         trainer.device = device
+         train_loader, val_loader, train_cell_id_mapping, val_cell_id_mapping, num_labels_list = trainer.setup(
+             train_loader, val_loader, train_cell_id_mapping, val_cell_id_mapping, num_labels_list
+@@ -476,7 +477,7 @@ def train_distributed(trainer_class, config, train_loader, val_loader, train_cel
+     if trial_number is None and shared_dict is None:
+         model_save_directory = os.path.join(config["model_save_path"], "GeneformerMultiTask")
+         model_path = os.path.join(model_save_directory, "pytorch_model.bin")
+-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
++        device = get_device_obj()
+         model = create_model(config, num_labels_list, device)
+         model.load_state_dict(torch.load(model_path))
+         return 0.0, model
+diff --git a/geneformer/perturber_utils.py b/geneformer/perturber_utils.py
+index 6970612..8a58e22 100644
+--- a/geneformer/perturber_utils.py
++++ b/geneformer/perturber_utils.py
+@@ -19,6 +19,8 @@ from transformers import (
+     BitsAndBytesConfig,
+ )
+ 
++from .device import get_device_obj, move_to_device
++
+ logger = logging.getLogger(__name__)
+ 
+ 
+@@ -191,33 +193,23 @@ def load_model(model_type, num_classes, model_directory, mode, quantize=False):
+ 
+     # Handle device placement and PEFT
+     adapter_config_path = os.path.join(model_directory, "adapter_config.json")
+-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+     if not quantize:
+         # Only move non-quantized models
+-        move_to_cuda(model)
++        move_to_device(model)
+     elif os.path.exists(adapter_config_path):
+         # If adapter files exist, load them into the model using PEFT's from_pretrained
+         model = PeftModel.from_pretrained(model, model_directory)
+-        move_to_cuda(model)
++        move_to_device(model)
+         print("loading lora weights")
+     elif peft_config:
+-        # Apply PEFT for quantized models (except MTLCellClassifier and CellClassifier-QuantInf)
++        # Apply PEFT for quantized models (except MTLCellClassifier and CellClassifier-QuantInt)
+         model.enable_input_require_grads()
+         model = get_peft_model(model, peft_config)
+-        move_to_cuda(model)
++        move_to_device(model)
+ 
+     return model
+ 
+ 
+-def move_to_cuda(model):
+-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+-    # get what device model is currently on
+-    model_device = next(model.parameters()).device
+-    # Check if the model is on the CPU and move to cuda if necessary
+-    if (model_device.type == "cpu") and (device.type == "cuda"):
+-        model.to(device)
+-
+-
+ def quant_layers(model):
+     layer_nums = []
+     for name, parameter in model.named_parameters():
+@@ -268,7 +260,7 @@ def forward_pass_single_cell(model, example_cell, layer_to_quant):
+     example_cell.set_format(type="torch")
+     input_data = example_cell["input_ids"]
+     with torch.no_grad():
+-        outputs = model(input_ids=input_data.to("cuda"))
++        outputs = model(input_ids=input_data.to(get_device_obj()))
+     emb = torch.squeeze(outputs.hidden_states[layer_to_quant])
+     del outputs
+     return emb
+@@ -748,7 +740,7 @@ def gen_attention_mask(minibatch_encoding, max_len=None):
+         else [1] * max_len
+         for original_len in original_lens
+     ]
+-    return torch.tensor(attention_mask, device="cuda")
++    return torch.tensor(attention_mask, device=get_device_obj())
+ 
+ 
+ # get cell embeddings excluding padding
+@@ -790,7 +782,7 @@ def quant_cos_sims(
+     # if emb_mode == "gene", can only calculate gene cos sims
+     # against original cell
+     if cell_states_to_model is None or emb_mode == "gene":
+-        cos_sims = cos(perturbation_emb, original_emb).to("cuda")
++        cos_sims = cos(perturbation_emb, original_emb).to(get_device_obj())
+ 
+     elif cell_states_to_model is not None and emb_mode == "cell":
+         possible_states = get_possible_states(cell_states_to_model)
+@@ -799,7 +791,7 @@ def quant_cos_sims(
+             cos_sims[state] = cos_sim_shift(
+                 original_emb,
+                 perturbation_emb,
+-                state_embs_dict[state].to("cuda"),  # required to move to cuda here
++                state_embs_dict[state].to(get_device_obj()),  # required to move to accelerator here
+                 cos,
+             )
+ 
+diff --git a/geneformer/tokenizer.py b/geneformer/tokenizer.py
+index 8af0cfa..846e290 100644
+--- a/geneformer/tokenizer.py
++++ b/geneformer/tokenizer.py
+@@ -538,13 +538,11 @@ class TranscriptomeTokenizer:
+         coding_miRNA_loc = np.where(
+             [self.genelist_dict.get(i, False) for i in adata.var["ensembl_id_collapsed"]]
+         )[0]
++        collapsed_ids = adata.var["ensembl_id_collapsed"].to_numpy()
+         norm_factor_vector = np.array(
+-            [
+-                self.gene_median_dict[i]
+-                for i in adata.var["ensembl_id_collapsed"][coding_miRNA_loc]
+-            ]
++            [self.gene_median_dict[i] for i in collapsed_ids[coding_miRNA_loc]]
+         )
+-        coding_miRNA_ids = adata.var["ensembl_id_collapsed"][coding_miRNA_loc]
++        coding_miRNA_ids = collapsed_ids[coding_miRNA_loc]
+         coding_miRNA_tokens = np.array(
+             [self.gene_token_dict[i] for i in coding_miRNA_ids]
+         )

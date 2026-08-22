@@ -1,0 +1,41 @@
+# ---- Python / env ----
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- local workspace / generated artifacts (NOT for the public repo) ---
+# .venv holds torch + geneformer (~1.5 GB) — recreate via `uv venv` + README
+/.omc/
+/.omo/
+/analysis_ws/
+/input/
+/rds2h5ad/rds_data/
+/rds2h5ad/ws/
+/rds2h5ad/renv/
+/rds2h5ad/pyenv/
+/rds2h5ad/env.sh
+/rds2h5ad/manifest.json
+/rds2h5ad/.Rprofile
+/rds2h5ad/renv.lock
+
+# --- genesformer repository (separate clone) ---
+# geneformer_hf/ is a git-lfs clone of ctheodoris/Geneformer (7 GB incl. weights).
+# Not committed. Fetch with ./download.sh. Our device patches live in patches/.
+/geneformer_hf/
+analysis/.omc/
+analysis/.omo/
+analysis/.DS_Store
+
+# --- OS / editor ---
+.DS_Store
+*.swp
+.idea/
+.vscode/
+*.log
+
+# --- ref data (MGI homology; auto-downloaded by 03 script, symlink re-created) ---
+ref
+analysis/ref
