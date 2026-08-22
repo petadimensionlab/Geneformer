@@ -66,12 +66,17 @@ num_proc=nproc)` で perturbation `Dataset` を構築します。3 つの別々�
 
 2. **`nproc`** — `datasets==4.x` では map 関数(ネストしたクロージャで
    `self.tokens_to_perturb` 等を参照)は `spawn` で pickle でき、nproc>1 も動作可。
-   `07` はデフォルト **`nproc=1`**(検証済み安定)、`IS_NPROC` で上書き可。
-   nproc=1 を推奨する理由:
+   **ここで実証済み:** `make_group_perturbation_batch` と同じクロージャ形状を
+   `datasets==4.0.0` で `num_proc=1/2/4` に渡して `dataset.map` を実行し、
+   3 つとも同一の正しい結果を返しました。つまり datasets 4.x なら nproc>1 は
+   機能します。`07` はそれでもデフォルト **`nproc=1`**(検証済み安定)、
+   `IS_NPROC` で上書き可。nproc=1 を推奨する理由:
    - ワーカーが RAM を消費し、同一ホストの MPS forward pass と競合。
    - 2 遺伝子以上(または `combos>0`)だとセルあたりバリアント数が増え、map 出力が
      大きくなり multiprocessing で型が不安定になりやすい — nproc=1 はそれを回避。
-   - 単一遺伝子なら map は直列でも十分速い。
+   - **並列化が効くのは大規模データのみ。** 4 セルのベンチでは nproc=1 が ~0.01s、
+     nproc=2/4 が ~0.09s(spawn + プロセス間通信のオーバーヘッドが小規模で支配的)。
+     単一遺伝子の perturbation では map は直列でも十分速く、MPS forward が常に支配的。
    - `07` は **`nproc>1` のとき必ず warning** を出し、datasets<5 と控えめな
      `max_ncells` が必須であることを再通知。
 

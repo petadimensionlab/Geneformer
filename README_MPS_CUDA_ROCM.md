@@ -69,13 +69,20 @@ all of them and prints warnings / RAM estimates at runtime.
 
 2. **`nproc`** — with `datasets==4.x` the map function (a nested closure aliasing
    `self.tokens_to_perturb`, etc.) *does* pickle under `spawn` and nproc>1 can
-   run. `07` defaults to **`nproc=1`** (verified-stable), overridable with
-   `IS_NPROC`. Reasons nproc=1 is the recommended default:
+   run. **Empirically verified here:** the exact closure shape of
+   `make_group_perturbation_batch` (delete-index + optional delete_indices) was
+   run through `dataset.map` with `num_proc=1/2/4` on `datasets==4.0.0`; all
+   three produced identical, correct output. So nproc>1 is functional with
+   datasets 4.x. `07` still defaults to **`nproc=1`** (verified-stable),
+   overridable with `IS_NPROC`. Reasons nproc=1 is the recommended default:
    - Workers add RAM that competes with the MPS forward pass on the same host.
    - With 2+ genes (or `combos>0`) the per-cell variant count grows, so the map
      output becomes large and type-inconsistent under multiprocessing — nproc=1
      sidesteps that fragility.
-   - For a single gene the map is fast enough serially.
+   - **Parallelism only pays off on large datasets.** A 4-cell benchmark showed
+     nproc=1 at ~0.01s and nproc=2/4 at ~0.09s (spawn + interprocess overhead
+     dominates at small scale). For single-gene perturbations the map is quick
+     serially and the MPS forward pass dominates regardless of nproc.
    - `07` prints a **warning whenever `nproc>1`**, reminding you datasets<5 and
      modest `max_ncells` are required.
 
