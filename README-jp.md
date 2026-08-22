@@ -116,10 +116,11 @@ num_proc=nproc)` で perturbation `Dataset` を構築します。3 つの別々�
 ```bash
 # 1. Geneformer パッケージ(git-lfs クローン、重み込み ~7 GB)を geneformer_hf/ に
 #    取得し、マルチバックエンド(MPS/CUDA/ROCm)の device パッチを適用する。
-#    (`./download.sh` のオプションは後述の「モデル重みは LFS 管理」を参照)
+#    --force-https を使うこと: 一部のホストでは git-lfs がファイルを LFS
+#    ポインタのまま残す(後述の「モデル重みは LFS 管理」を参照)。
 #    重要: パッチのパスは geneformer_hf/ 基準なので、先に cd すること。
 #    リポジトリ root から patch を実行すると "File to patch:" で止まります。
-./download.sh
+./download.sh --force-https
 cd geneformer_hf
 patch -p1 < ../patches/geneformer_multibackend.patch
 cp ../patches/device.py geneformer/device.py        # 新規ファイル(未追跡)
@@ -149,16 +150,22 @@ uv pip install --python .venv/bin/python "datasets==4.0.0"
 モデル重みは LFS 管理。`download.sh` を使ってください:
 
 ```bash
-./download.sh                  # V2-104M + 辞書を geneformer_hf/ に取得 (git-lfs 優先)
-./download.sh --force-https    # git-lfs がない環境では直接 HTTPS で取得
-./download.sh --all            # 全モデル (V1-10M, V2-104M, CLcancer, V2-316M)
+./download.sh --force-https   # 推奨: 直接 HTTPS 取得(マシン間で最も確実)
+./download.sh                 # git-lfs 優先、git-lfs が無い場合のみ HTTPS にフォールバック
+./download.sh --all           # 全モデル (V1-10M, V2-104M, CLcancer, V2-316M)
 # 対象変更: ./download.sh --model V1-10M
 ```
 
-`download.sh` は git-lfs を優先し、ない環境では `curl` で `huggingface.co`
-から取得するフォールバックがあります。環境変数 `GENEFORMER_DIR`(出力先)、
-`GF_REPO_URL`、`HF_MIRROR` で上書き可。既存ファイルはスキップなので再実行も
-安全(冪等)。
+**`--force-https` を使うこと。** 実際には git-lfs が一部のマシンでは成功しても、
+別のマシン(例: Linux)では失敗するか、ファイルを LFS ポインタのまま残すことが
+あります。そのまま使うと、後で `safetensors: header too large` や
+`pickle.UnpicklingError: invalid load key, 'v'` などのエラーで読み込みに失敗
+します。`--force-https` は全ファイル(モデル重み + `geneformer/*.pkl` 辞書)を
+`huggingface.co` から `curl` で直接取得し、git-lfs を完全に回避するため、
+最も再現性が高い方法です。環境変数 `GENEFORMER_DIR`(出力先)、`GF_REPO_URL`、
+`HF_MIRROR` で上書き可。既存ファイルはスキップされるので再実行も安全(冪等)。
+ただし、ファイルが存在しても LFS ポインタのままの場合は `--force-https` が
+取得し直します。
 
 ## ダウンロードされたファイル
 

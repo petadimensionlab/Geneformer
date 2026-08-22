@@ -122,11 +122,11 @@ Env vars used by `07`: `IS_NPROC` (default 1), `IS_MAX_CELLS` (default 200).
 ```bash
 # 1. Get the geneformer package (git-lfs clone, ~7 GB with weights) into
 #    geneformer_hf/, then apply the multi-backend (MPS/CUDA/ROCm) device patches.
-#    (`./download.sh` options are documented below in "Model weights are
-#    LFS-tracked".)
+#    Use --force-https: git-lfs silently leaves files as LFS pointers on some
+#    hosts (see "Model weights are LFS-tracked" below).
 #    IMPORTANT: the patch paths are relative to geneformer_hf/, so cd there
 #    first. Running `patch` from the repo root fails with "File to patch:".
-./download.sh
+./download.sh --force-https
 cd geneformer_hf
 patch -p1 < ../patches/geneformer_multibackend.patch
 cp ../patches/device.py geneformer/device.py        # new file (untracked)
@@ -156,16 +156,23 @@ uv pip install --python .venv/bin/python "datasets==4.0.0"
 Model weights are LFS-tracked. Use the provided `download.sh`:
 
 ```bash
-./download.sh                # V2-104M + dictionaries into geneformer_hf/ (git-lfs preferred)
-./download.sh --force-https  # force direct HTTPS download (no git-lfs / it fails)
-./download.sh --all          # all models (V1-10M, V2-104M, CLcancer, V2-316M)
+./download.sh --force-https   # RECOMMENDED: direct HTTPS download (most reliable across machines)
+./download.sh                 # git-lfs first, HTTPS fallback only if git-lfs is absent
+./download.sh --all           # all models (V1-10M, V2-104M, CLcancer, V2-316M)
 # change the target model: ./download.sh --model V1-10M
 ```
 
-`download.sh` prefers git-lfs and falls back to `curl` against
-`huggingface.co` when git-lfs is unavailable. It is overridable via the
-`GENEFORMER_DIR` (output dir), `GF_REPO_URL`, and `HF_MIRROR` environment
-variables. Existing files are skipped, so re-running is safe (idempotent).
+**Use `--force-https`.** In practice git-lfs succeeds on some machines but fails
+or silently leaves files as LFS pointers on others (e.g. Linux hosts), which
+later breaks loading with errors such as
+`safetensors: header too large` or
+`pickle.UnpicklingError: invalid load key, 'v'`. `--force-https` downloads every
+file (model weights + `geneformer/*.pkl` dictionaries) directly from
+`huggingface.co` with `curl`, bypassing git-lfs entirely, and is the most
+reproducible option. Overridable via the `GENEFORMER_DIR` (output dir),
+`GF_REPO_URL`, and `HF_MIRROR` environment variables. Existing files are
+skipped, so re-running is safe (idempotent); if a file is already present but
+is an LFS pointer, `--force-https` re-fetches it.
 
 ## Downloaded files
 
