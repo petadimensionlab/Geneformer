@@ -97,10 +97,13 @@ clone_and_lfs_pull() {
   fi
 
   echo "[2/2] git-lfs で対象ファイルを取得 ..."
+  # 辞書(geneformer/*.pkl)も pull: モデル同様、トークナイズに必須
   if [ "$DOWNLOAD_ALL" = true ]; then
     git -C "$GENEFORMER_DIR" lfs pull
   else
-    git -C "$GENEFORMER_DIR" lfs pull --include="$MODEL_DIR/*"
+    git -C "$GENEFORMER_DIR" lfs pull \
+      --include="$MODEL_DIR/*" \
+      --include="geneformer/*.pkl"
   fi
 
   echo "git-lfs 取得完了。"
@@ -157,15 +160,20 @@ https_download() {
 
 # ---------------------------------------------------------------- 実行
 # 辞書とコードは常に必要。git-lfs が無い/失敗した場合は HTTPS で取得。
+# is_real_pkl: LFS ポインタ(先頭 'version https')は実データ扱いしない
+is_real_pkl() {
+  local f="$1"
+  [ -s "$f" ] && [[ "$(head -c 8 "$f")" != "version " ]]
+}
+
 if [ "$FORCE_HTTPS" = true ]; then
   https_download
 elif clone_and_lfs_pull; then
-  # git-lfs 経由では辞書(.pkl) も一緒に落ちることを確認
-  if ls "$GENEFORMER_DIR"/geneformer/*.pkl >/dev/null 2>&1; then
+  if is_real_pkl "$GENEFORMER_DIR/geneformer/gene_median_dictionary_gc104M.pkl" \
+      && is_real_pkl "$GENEFORMER_DIR/geneformer/token_dictionary_gc104M.pkl"; then
     :
   else
-    echo "注意: 辞書ファイルが git-lfs で取得できませんでした。HTTPS で補完します。"
-    FORCE_HTTPS=true
+    echo "注意: 辞書が LFS ポインタのままです。HTTPS で取得し直します。"
     https_download
   fi
 else
