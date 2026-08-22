@@ -204,6 +204,41 @@ uv pip install --python .venv/bin/python "transformers==4.46.3"
 | `analysis/verify_mps_fast.py` | frozen 埋め込み + probe の高速検証 |
 | `analysis/verify_mps_finetune.py` | 高速微調整検証 |
 
+### ティッシュごとの実行(04–07)
+
+`04_baseline.py` / `05_figures.py` / `06_finetune.py` /
+`07_in_silico_perturbation.py` は、`input/<TISSUE>/h5ad/*.h5ad` のティッシュ
+フォルダからワークスペースを自動解決します(`analysis/` に同梱の
+`_resolve_tissue.py` ヘルパーを使用)。`ADPD_TISSUE` でティッシュを選ぶと、
+`input/<TISSUE>/` を作業ルートとし、`tokenized/`, `results/`, `runs/` を
+書き出します:
+
+```bash
+export GENEFORMER_DIR=$PWD/geneformer_hf        # Geneformer checkout + V2-104M
+export GENEFORMER_MODEL=Geneformer-V2-104M
+
+# 1 ティッシュ(input/ 配下の任意の PD_*/AD_*、例: PD_blood / AD_blood)
+ADPD_TISSUE=PD_blood  .venv/bin/python analysis/04_baseline.py        # tokenize + 埋め込み + probe
+ADPD_TISSUE=PD_blood  .venv/bin/python analysis/05_figures.py          # 図(cached 埋め込みを再利用)
+ADPD_TISSUE=PD_blood  .venv/bin/python analysis/06_finetune.py         # セル分類器の微調整
+ADPD_TISSUE=PD_blood  .venv/bin/python analysis/07_in_silico_perturbation.py
+
+# または ADPD_ROOT で直接指定も可(従来方式):
+#   ADPD_ROOT=$PWD/input/PD_blood
+```
+
+> **補足**
+> - `ADPD_TISSUE` は `input/` 下で `h5ad/*.h5ad` を持つフォルダ名を指定。
+>   必要な obs 列(`cell_id`, `individual`, `celltype`, `split`)があること。
+>   含まれる全ティッシュ(`PD_*`, `AD_*`)がこの条件を満たします。
+> - `ADPD_PREFIX` は `ADPD_TISSUE` の後方互換エイリアス。`ADPD_ROOT` を
+>   設定するとリゾルバを完全にバイパスします。
+> - `06_finetune.py` は `_1/_2/_3` サフィックスでリプリケートを分割し、
+>   3 群がすべて空でないことのみを要求します(PD_* は 12/rep、AD_* は
+>   通常 9–10/rep)。
+> - 各スクリプトはキャッシュされます。再実行は既存の `tokenized/`,
+>   埋め込み、チェックポイントを再利用します。再計算は出力を削除して。
+
 ## Seurat `.rds` から Geneformer 用 `.h5ad` への変換(R → Python)
 
 **R で生成された Seurat オブジェクト(`.rds`)** を、この Geneformer パイプラインで

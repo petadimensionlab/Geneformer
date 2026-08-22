@@ -10,13 +10,14 @@ baseline, so the two are directly comparable:
 from __future__ import annotations
 
 import json
+import os
 import pickle
+import sys
 from pathlib import Path
 
 import matplotlib
 
 matplotlib.use("Agg")
-import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,17 +27,16 @@ import torch
 from datasets import load_from_disk
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _resolve_tissue import resolve as _resolve_tissue
+
 SEED = 42
 np.random.seed(SEED)
 
 # ---------------------------------------------------------------- configuration
-# All machine-specific paths come from environment variables so this script runs
-# unchanged on any host. See README.md.
-#   ADPD_ROOT       workspace for this tissue (holds export/ h5ad/ results/ ...)
-#   ADPD_PREFIX     short dataset name, used for output filenames
-#   GENEFORMER_DIR  the Geneformer checkout (contains geneformer/ and the model)
-ROOT = Path(os.environ.get("ADPD_ROOT", Path.home() / "Documents/ADPD_analysis"))
-PREFIX = os.environ.get("ADPD_PREFIX", "dataset")
+# Resolve the tissue workspace from input/<TISSUE>/h5ad/*.h5ad. See
+# _resolve_tissue.py (ADPD_TISSUE / ADPD_PREFIX / ADPD_ROOT).
+ROOT, PREFIX = _resolve_tissue()
 GF_ROOT = Path(os.environ.get(
     "GENEFORMER_DIR",
     Path.home() / "Documents/geneformer-uv-starter/geneformer-workspace/Geneformer",
@@ -64,11 +64,18 @@ print(f"fine-tuning on device: {device}", flush=True)
 # ------------------------------------------------------------------- splits
 tokens = load_from_disk(str(TOKENIZED))
 samples = sorted(set(tokens["individual"]))
-by_rep = {"1": [], "2": [], "3": []}
+by_rep: dict[str, list] = {}
 for s in samples:
-    by_rep[s.rsplit("_", 1)[-1]].append(s)
-TRAIN, EVAL, TEST = by_rep["1"], by_rep["2"], by_rep["3"]
-assert len(TRAIN) == len(EVAL) == len(TEST) == 12, (len(TRAIN), len(EVAL), len(TEST))
+    rep = s.rsplit("_", 1)[-1]
+    if rep in ("1", "2", "3"):
+        by_rep.setdefault(rep, []).append(s)
+TRAIN, EVAL, TEST = by_rep.get("1", []), by_rep.get("2", []), by_rep.get("3", [])
+# Replicate-cohort split: train=_1, eval=_2, test=_3. Tissue-dependent sample
+# counts (PD_*: 12/rep; AD_*: 9-10/rep) — only require each split non-empty.
+assert TRAIN and EVAL and TEST, (
+    f"need non-empty _1/_2/_3 replicate cohorts; got "
+    f"train={len(TRAIN)} eval={len(EVAL)} test={len(TEST)}"
+)
 assert not (set(TRAIN) & set(EVAL) | set(TRAIN) & set(TEST) | set(EVAL) & set(TEST))
 print(f"samples  train {len(TRAIN)}  eval {len(EVAL)}  test {len(TEST)}", flush=True)
 

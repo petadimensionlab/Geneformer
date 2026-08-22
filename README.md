@@ -217,6 +217,41 @@ Analysis scripts live in `analysis/`:
 | `analysis/verify_mps_fast.py` | fast frozen-embedding + probe verify |
 | `analysis/verify_mps_finetune.py` | fast fine-tune verify |
 
+### Running per tissue (04–07)
+
+Each of `04_baseline.py` / `05_figures.py` / `06_finetune.py` /
+`07_in_silico_perturbation.py` resolves its workspace automatically from a
+tissue folder under `input/<TISSUE>/h5ad/*.h5ad` (the `_resolve_tissue.py`
+helper, bundled in `analysis/`). Pick the tissue with `ADPD_TISSUE`; the
+scripts use `input/<TISSUE>/` as the workspace root and write
+`tokenized/`, `results/`, `runs/` inside it:
+
+```bash
+export GENEFORMER_DIR=$PWD/geneformer_hf        # Geneformer checkout + V2-104M
+export GENEFORMER_MODEL=Geneformer-V2-104M
+
+# one tissue (pick any PD_*/AD_* under input/, e.g. PD_blood / AD_blood)
+ADPD_TISSUE=PD_blood  .venv/bin/python analysis/04_baseline.py        # tokenize + embeddings + probe
+ADPD_TISSUE=PD_blood  .venv/bin/python analysis/05_figures.py          # figures (reuses cached embeddings)
+ADPD_TISSUE=PD_blood  .venv/bin/python analysis/06_finetune.py         # fine-tune cell classifier
+ADPD_TISSUE=PD_blood  .venv/bin/python analysis/07_in_silico_perturbation.py
+
+# OR equivalent via a single tissue:
+#   ADPD_ROOT=$PWD/input/PD_blood  (legacy)  — both work
+```
+
+> **Notes**
+> - `ADPD_TISSUE` must name a folder under `input/` that holds
+>   `h5ad/*.h5ad` with the required obs columns (`cell_id`, `individual`,
+>   `celltype`, `split`). All checked-in tissues (`PD_*`, `AD_*`) satisfy this.
+> - `ADPD_PREFIX` remains a back-compat alias for `ADPD_TISSUE`; setting
+>   `ADPD_ROOT` bypasses the resolver entirely.
+> - `06_finetune.py` splits held-out replicates by their `_1/_2/_3` suffix and
+>   only requires all three cohorts to be non-empty (PD_* have 12/rep,
+>   AD_* typically 9–10/rep).
+> - Each script is cached: re-running reuses existing `tokenized/`, embeddings,
+>   and checkpoints. Delete an output to force recomputation.
+
 ## Converting a Seurat `.rds` to a Geneformer `.h5ad` (R → Python)
 
 To go from an **R-generated Seurat object (`.rds`)** to an `.h5ad` that this

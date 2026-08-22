@@ -9,7 +9,11 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from pathlib import Path
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _resolve_tissue import resolve as _resolve_tissue
 
 import numpy as np
 import pandas as pd
@@ -23,13 +27,9 @@ np.random.seed(SEED)
 os.environ["WANDB_DISABLED"] = "true"
 
 # ---------------------------------------------------------------- configuration
-# All machine-specific paths come from environment variables so this script runs
-# unchanged on any host. See README.md.
-#   ADPD_ROOT       workspace for this tissue (holds export/ h5ad/ results/ ...)
-#   ADPD_PREFIX     short dataset name, used for output filenames
-#   GENEFORMER_DIR  the Geneformer checkout (contains geneformer/ and the model)
-ROOT = Path(os.environ.get("ADPD_ROOT", Path.home() / "Documents/ADPD_analysis"))
-PREFIX = os.environ.get("ADPD_PREFIX", "dataset")
+# Resolve the tissue workspace from input/<TISSUE>/h5ad/*.h5ad. See
+# _resolve_tissue.py (ADPD_TISSUE / ADPD_PREFIX / ADPD_ROOT).
+ROOT, PREFIX = _resolve_tissue()
 GF_ROOT = Path(os.environ.get(
     "GENEFORMER_DIR",
     Path.home() / "Documents/geneformer-uv-starter/geneformer-workspace/Geneformer",

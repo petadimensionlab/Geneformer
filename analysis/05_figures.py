@@ -7,7 +7,11 @@ the normalized confusion heatmap and the held-out-cell UMAP.
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _resolve_tissue import resolve as _resolve_tissue
 
 import anndata as ad
 import matplotlib
@@ -25,8 +29,7 @@ from sklearn.preprocessing import StandardScaler
 SEED = 42
 np.random.seed(SEED)
 
-ROOT = Path(os.environ.get("ADPD_ROOT", Path.home() / "Documents/ADPD_analysis"))
-PREFIX = os.environ.get("ADPD_PREFIX", "dataset")
+ROOT, PREFIX = _resolve_tissue()
 EMB_FILE = ROOT / "results/embeddings/pretrained_cell_embeddings.csv"
 FIG_DIR = ROOT / "results/figures"
 TABLE_DIR = ROOT / "results/tables"
