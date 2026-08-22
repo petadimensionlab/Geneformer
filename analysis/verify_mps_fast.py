@@ -8,7 +8,11 @@ EmbExtractor -> probe path is MPS-correct end to end.
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _resolve_tissue import resolve as _resolve_tissue
 
 import numpy as np
 import pandas as pd
@@ -21,8 +25,7 @@ os.environ["WANDB_DISABLED"] = "true"
 SEED = 42
 np.random.seed(SEED)
 
-ROOT = Path(os.environ.get("ADPD_ROOT", Path.cwd() / "analysis_ws"))
-PREFIX = os.environ.get("ADPD_PREFIX", "PD_smallint")
+ROOT, PREFIX = _resolve_tissue()
 GF_ROOT = Path(os.environ["GENEFORMER_DIR"])
 MODEL_NAME = os.environ.get("GENEFORMER_MODEL", "Geneformer-V2-104M")
 MODEL_DIR = GF_ROOT / MODEL_NAME

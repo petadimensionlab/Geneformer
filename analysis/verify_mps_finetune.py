@@ -8,12 +8,15 @@ the geneformer Classifier (which uses HF Trainer) directly.
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 os.environ["WANDB_DISABLED"] = "true"
 
-ROOT = Path(os.environ.get("ADPD_ROOT", Path.cwd() / "analysis_ws"))
-PREFIX = os.environ.get("ADPD_PREFIX", "PD_smallint")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _resolve_tissue import resolve as _resolve_tissue
+
+ROOT, PREFIX = _resolve_tissue()
 GF_ROOT = Path(os.environ["GENEFORMER_DIR"])
 MODEL_NAME = os.environ.get("GENEFORMER_MODEL", "Geneformer-V2-104M")
 MODEL_DIR = GF_ROOT / MODEL_NAME
