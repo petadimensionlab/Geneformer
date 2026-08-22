@@ -1,5 +1,8 @@
 # Geneformer V2-104M — マルチバックエンド (MPS / CUDA / ROCm) 対応
 
+> **🇬🇧 English version → [`README.md`](README.md)**
+> **日本語 (Japanese) | [English](README.md)**
+
 このワークスペースでは、[`ctheodoris/Geneformer`](https://huggingface.co/ctheodoris/Geneformer) の
 **Geneformer V2-104M** を、3 つのアクセラレータで動作させます:
 

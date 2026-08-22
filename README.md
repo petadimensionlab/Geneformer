@@ -1,5 +1,7 @@
 # Geneformer V2-104M — Multi-backend (MPS / CUDA / ROCm) enablement
 
+> **Language: English | [Japanese](README-jp.md)**
+
 This workspace makes **Geneformer V2-104M** (from
 [`ctheodoris/Geneformer`](https://huggingface.co/ctheodoris/Geneformer)) run on
 three accelerator backends:
@@ -143,16 +145,16 @@ uv pip install --python .venv/bin/python "datasets==4.0.0"
 Model weights are LFS-tracked. Use the provided `download.sh`:
 
 ```bash
-./download.sh                  # V2-104M + 辞書を geneformer_hf/ に取得 (git-lfs 優先)
-./download.sh --force-https    # git-lfs が無い/失敗する環境では直接 HTTPS で取得
-./download.sh --all            # 全モデル (V1-10M, V2-104M, CLcancer, V2-316M)
-# 対象を変更: ./download.sh --model V1-10M
+./download.sh                # V2-104M + dictionaries into geneformer_hf/ (git-lfs preferred)
+./download.sh --force-https  # force direct HTTPS download (no git-lfs / it fails)
+./download.sh --all          # all models (V1-10M, V2-104M, CLcancer, V2-316M)
+# change the target model: ./download.sh --model V1-10M
 ```
 
-`download.sh` は git-lfs を優先し、git-lfs が無い環境では `curl` で
-`huggingface.co` から直接取得するフォールバックを持ちます。環境変数
-`GENEFORMER_DIR`（出力先）、`GF_REPO_URL`、`HF_MIRROR` で上書き可能です。
-既存ファイルはスキップするため再実行も安全（冪等）。
+`download.sh` prefers git-lfs and falls back to `curl` against
+`huggingface.co` when git-lfs is unavailable. It is overridable via the
+`GENEFORMER_DIR` (output dir), `GF_REPO_URL`, and `HF_MIRROR` environment
+variables. Existing files are skipped, so re-running is safe (idempotent).
 
 ## Downloaded files
 
@@ -223,7 +225,8 @@ R/Python bridge that inspects the object, subsamples + exports raw counts, then
 maps mouse→human orthologs and assembles the `.h5ad`).
 
 - Full documentation: **[`rds2h5ad/rds2h5ad.md`](rds2h5ad/rds2h5ad.md)**
-  (日本語版: **[`rds2h5ad/rds2h5ad-jp.md`](rds2h5ad/rds2h5ad-jp.md)**)
+  (a Japanese version is also available:
+  **[`rds2h5ad/rds2h5ad-jp.md`](rds2h5ad/rds2h5ad-jp.md)**)
   - The `.rds` must expose an `RNA` assay with a raw-integer `counts` layer
     (never the SCT default), a sample column with `_1/_2/_3` replicate suffixes,
     a cell-type column, and mouse gene symbols.
