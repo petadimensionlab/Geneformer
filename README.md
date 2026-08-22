@@ -122,6 +122,8 @@ Env vars used by `07`: `IS_NPROC` (default 1), `IS_MAX_CELLS` (default 200).
 ```bash
 # 1. Get the geneformer package (git-lfs clone, ~7 GB with weights) into
 #    geneformer_hf/, then apply the multi-backend (MPS/CUDA/ROCm) device patches.
+#    (`./download.sh` options are documented below in "Model weights are
+#    LFS-tracked".)
 #    IMPORTANT: the patch paths are relative to geneformer_hf/, so cd there
 #    first. Running `patch` from the repo root fails with "File to patch:".
 ./download.sh
@@ -188,20 +190,15 @@ package's token/median dictionaries. Files actually downloaded:
 
 ## Environment (uv + venv)
 
+The pipeline was verified against this environment (see **Setup (uv)** above
+for the install commands):
+
 ```
 .venv/                      1.5 GB  uv-created Python 3.12 environment
 .venv/bin/python            3.12.9
 torch                       2.13.0  (MPS built: True, MPS available: True)
 transformers                4.46.3  (pinned — 5.x breaks SpecialTokensMixin)
 datasets                    4.0.0   (pinned — 5.x hangs InSilicoPerturber.perturb_data)
-```
-
-Install:
-
-```bash
-uv venv .venv --python 3.12
-uv pip install --python .venv/bin/python -e geneformer_hf
-uv pip install --python .venv/bin/python "transformers==4.46.3"
 ```
 
 ## Generated artifacts (`analysis_ws/`)

@@ -116,6 +116,7 @@ num_proc=nproc)` で perturbation `Dataset` を構築します。3 つの別々�
 ```bash
 # 1. Geneformer パッケージ(git-lfs クローン、重み込み ~7 GB)を geneformer_hf/ に
 #    取得し、マルチバックエンド(MPS/CUDA/ROCm)の device パッチを適用する。
+#    (`./download.sh` のオプションは後述の「モデル重みは LFS 管理」を参照)
 #    重要: パッチのパスは geneformer_hf/ 基準なので、先に cd すること。
 #    リポジトリ root から patch を実行すると "File to patch:" で止まります。
 ./download.sh
@@ -182,20 +183,15 @@ Geneformer リポジトリ(`geneformer_hf/`)は `ctheodoris/Geneformer` の git-
 
 ## 環境 (uv + venv)
 
+パイプラインはこの環境で検証済みです(インストール手順は上記 **Setup (uv)** を
+参照):
+
 ```
 .venv/                      1.5 GB  uv 作成の Python 3.12 環境
 .venv/bin/python            3.12.9
 torch                       2.13.0  (MPS built: True, MPS available: True)
 transformers                4.46.3  (固定 — 5.x は SpecialTokensMixin が壊れる)
 datasets                    4.0.0   (固定 — 5.x は InSilicoPerturber.perturb_data がハング)
-```
-
-インストール:
-
-```bash
-uv venv .venv --python 3.12
-uv pip install --python .venv/bin/python -e geneformer_hf
-uv pip install --python .venv/bin/python "transformers==4.46.3"
 ```
 
 ## 生成された成果物(`analysis_ws/`)
