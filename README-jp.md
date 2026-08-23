@@ -163,6 +163,14 @@ uv pip install --python .venv/bin/python "datasets==4.0.0"
 `huggingface.co` から `curl` で直接取得し、git-lfs を完全に回避するため、
 最も再現性が高い方法です。環境変数 `GENEFORMER_DIR`(出力先)、`GF_REPO_URL`、
 `HF_MIRROR` で上書き可。既存ファイルはスキップされるので再実行も安全(冪等)。
+
+**実行のたびに全ファイルの整合性チェック(`verify_all`)を行います。**
+`model.safetensors`, `config.json`, `generation_config.json`,
+`training_args.bin`, `geneformer/*.pkl` の辞書4点, `setup.py`,
+`pyproject.toml` が **LFS ポインタではなく実データ**(最小サイズ以上)として
+存在するかを確認します。不足またはポインタのままなら HTTPS で再取得し、
+それでも揃わなければ非ゼロで失敗します — つまり「成功」は本当に使える
+状態であることを保証します。
 ただし、ファイルが存在しても LFS ポインタのままの場合は `--force-https` が
 取得し直します。
 

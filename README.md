@@ -173,6 +173,14 @@ reproducible option. Overridable via the `GENEFORMER_DIR` (output dir),
 skipped, so re-running is safe (idempotent); if a file is already present but
 is an LFS pointer, `--force-https` re-fetches it.
 
+**Every run ends with a full-file integrity check** (`verify_all`): it verifies
+that `model.safetensors`, `config.json`, `generation_config.json`,
+`training_args.bin`, all four `geneformer/*.pkl` dictionaries, `setup.py`, and
+`pyproject.toml` exist as **real data** (not LFS pointers) with a minimum size.
+If anything is missing or still a pointer, `download.sh` re-fetches it over
+HTTPS and fails with a non-zero exit if it is still incomplete — so a "success"
+means the checkout is genuinely usable.
+
 ## Downloaded files
 
 The Geneformer repo (`geneformer_hf/`) is a git-lfs clone of
