@@ -223,6 +223,7 @@ Analysis scripts live in `analysis/`:
 | Script | Role |
 |---|---|
 | `analysis/04_baseline.py` | tokenize → frozen embeddings → logistic probe |
+| `analysis/04b_extract_embeddings.py` | embeddings only (no probe) — see below |
 | `analysis/06_finetune.py` | fine-tune cell classifier |
 | `analysis/07_in_silico_perturbation.py` | tutorial IS perturbation ported to V2 |
 | `analysis/smoke_mps.py` | MPS vs CPU numerical correctness |
@@ -276,6 +277,41 @@ ADPD_TISSUE=PD_blood  .venv/bin/python analysis/07_in_silico_perturbation.py
 >   AD_* typically 9–10/rep).
 > - Each script is cached: re-running reuses existing `tokenized/`, embeddings,
 >   and checkpoints. Delete an output to force recomputation.
+
+### 04 vs `04b_extract_embeddings.py`
+
+`04_baseline.py` runs **tokenize → extract embeddings → fit logistic probe** in
+one go. The embedding step is the slow part (it runs the full 104M model over
+every cell), so `04b_extract_embeddings.py` extracts **only the embeddings**
+(no probe — `05_figures.py` refits the probe itself) and writes the same file
+`05` reads:
+
+```
+<input>/<TISSUE>/results/embeddings/pretrained_cell_embeddings.csv
+```
+
+If `05_figures.py` fails with
+`No such file or directory: .../pretrained_cell_embeddings.csv`, the embeddings
+were never produced (04 was not run, or stopped before the embedding step). Run
+the embedding stage (idempotent — reuses an existing `tokenized/`):
+
+```bash
+env ADPD_TISSUE=<TISSUE> .venv/bin/python analysis/04b_extract_embeddings.py
+```
+
+**How to tell whether tokenization finished and only embeddings remain** — check
+for each artifact (all created by `04b`/`04`, in `<input>/<TISSUE>/`):
+
+| Artifact | Meaning |
+|---|---|
+| `tokenized/<PREFIX>.dataset/` (a directory, not empty) | tokenization done |
+| `results/embeddings/pretrained_cell_embeddings.csv` | embeddings done (05 is ready) |
+
+- If **only the tokenized dir exists** (embeddings CSV missing), tokenization
+  finished but the run stopped during embedding — just run `04b_extract_embeddings.py`;
+  it reuses `tokenized/` and only does the embedding.
+- If **neither exists**, run `04b_extract_embeddings.py` and it will both
+  tokenize and embed.
 
 ## Converting a Seurat `.rds` to a Geneformer `.h5ad` (R → Python)
 

@@ -216,6 +216,7 @@ datasets                    4.0.0   (固定 — 5.x は InSilicoPerturber.pertur
 | スクリプト | 役割 |
 |---|---|
 | `analysis/04_baseline.py` | tokenize → frozen 埋め込み → ロジスティック回帰 probe |
+| `analysis/04b_extract_embeddings.py` | 埋め込みのみ(probe なし)— 下記参照 |
 | `analysis/06_finetune.py` | セル分類器の微調整 |
 | `analysis/07_in_silico_perturbation.py` | チュートリアル IS perturbation を V2 用に移植 |
 | `analysis/smoke_mps.py` | MPS vs CPU の数値一致検証 |
@@ -269,6 +270,40 @@ ADPD_TISSUE=PD_blood  .venv/bin/python analysis/07_in_silico_perturbation.py
 >   通常 9–10/rep)。
 > - 各スクリプトはキャッシュされます。再実行は既存の `tokenized/`,
 >   埋め込み、チェックポイントを再利用します。再計算は出力を削除して。
+
+### 04 と `04b_extract_embeddings.py` の関係
+
+`04_baseline.py` は **tokenize → 埋め込み抽出 → ロジスティック回帰 probe** を
+一括で実行します。埋め込み抽出が最も重く(全細胞に対して 104M モデルを実行)、
+`04b_extract_embeddings.py` は **埋め込みのみ** を抽出します(probe はなし —
+`05_figures.py` が自身で probe を再実行)。05 が読むのと同じファイルを書き出します:
+
+```
+<input>/<TISSUE>/results/embeddings/pretrained_cell_embeddings.csv
+```
+
+`05_figures.py` が
+`No such file or directory: .../pretrained_cell_embeddings.csv` で失敗したら、
+埋め込みが生成されていません(04 未実行、または埋め込み前に停止)。埋め込み
+ステージを実行します(冪等 — 既存の `tokenized/` があれば再利用):
+
+```bash
+env ADPD_TISSUE=<TISSUE> .venv/bin/python analysis/04b_extract_embeddings.py
+```
+
+**tokenize 完了・embedding のみ残っているかの確認方法** — 各成果物(いずれも
+`04b`/`04` が `<input>/<TISSUE>/` に作成)を確認:
+
+| 成果物 | 意味 |
+|---|---|
+| `tokenized/<PREFIX>.dataset/`(ディレクトリで空でない) | tokenize 完了 |
+| `results/embeddings/pretrained_cell_embeddings.csv` | 埋め込み完了(05 実行可) |
+
+- **tokenized ディレクトリのみ存在**し埋め込み CSV が無い = tokenize は終わって
+  いるが、埋め込み中に停止 → `04b_extract_embeddings.py` を実行(既存の
+  `tokenized/` を再利用し、埋め込みのみ実施)。
+- **どちらも存在しない** = `04b_extract_embeddings.py` が tokenize + 埋め込みの
+  両方を行います。
 
 ## Seurat `.rds` から Geneformer 用 `.h5ad` への変換(R → Python)
 
