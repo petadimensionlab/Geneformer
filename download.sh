@@ -136,8 +136,8 @@ https_download() {
   )
   for f in "${model_files[@]}"; do
     local dest="$GENEFORMER_DIR/$MODEL_DIR/$f"
-    if [ -s "$dest" ]; then
-      echo "  スキップ (既存): $MODEL_DIR/$f"
+    if is_real "$dest"; then
+      echo "  スキップ (既存・実データ): $MODEL_DIR/$f"
       continue
     fi
     echo "  取得: $MODEL_DIR/$f"
@@ -169,25 +169,65 @@ https_download() {
 }
 
 # ---------------------------------------------------------------- 実行
-# 辞書とコードは常に必要。git-lfs が無い/失敗した場合は HTTPS で取得。
-# is_real_pkl: LFS ポインタ(先頭 'version https')は実データ扱いしない
-is_real_pkl() {
-  local f="$1"
-  [ -s "$f" ] && [[ "$(head -c 8 "$f")" != "version " ]]
+# is_real: 実データファイルか(LFS ポインタの先頭 'version https' でない + 最小サイズ)
+is_real() {
+  local f="$1" min_bytes="$2"
+  [ -s "$f" ] && [ "$(stat -c %s "$f" 2>/dev/null || stat -f %z "$f")" -ge "$min_bytes" ] \
+    && [[ "$(head -c 8 "$f")" != "version " ]]
 }
 
-if [ "$FORCE_HTTPS" = true ]; then
-  https_download
-elif clone_and_lfs_pull; then
-  if is_real_pkl "$GENEFORMER_DIR/geneformer/gene_median_dictionary_gc104M.pkl" \
-      && is_real_pkl "$GENEFORMER_DIR/geneformer/token_dictionary_gc104M.pkl"; then
-    :
+# verify_all: 必要な全ファイルが実データとして揃っているか。
+# 戻り値 0=全部OK, 1=不足あり。不足ファイルは $MISSING にスペース区切りで格納。
+verify_all() {
+  MISSING=""
+  local file min_bytes
+  # 相対パス + 実測サイズ(このリポジトリで確認済み)で検証。サイズ未満は LFS ポインタ/欠損とみなす。
+  for entry in \
+    "$MODEL_DIR/model.safetensors:400000000" \
+    "$MODEL_DIR/config.json:500" \
+    "$MODEL_DIR/generation_config.json:80" \
+    "$MODEL_DIR/training_args.bin:1000" \
+    "geneformer/token_dictionary_gc104M.pkl:400000" \
+    "geneformer/gene_median_dictionary_gc104M.pkl:1000000" \
+    "geneformer/ensembl_mapping_dict_gc104M.pkl:3000000" \
+    "geneformer/gene_name_id_dict_gc104M.pkl:1000000" \
+    "setup.py:500" \
+    "pyproject.toml:50"; do
+    file="${entry%%:*}"; min_bytes="${entry##*:}"
+    if ! is_real "$GENEFORMER_DIR/$file" "$min_bytes"; then
+      echo "  [MISSING] $file"
+      MISSING="$MISSING $file"
+    fi
+  done
+  if [ -n "$MISSING" ]; then
+    return 1
+  fi
+  return 0
+}
+
+echo ""
+echo "===== ダウンロード後の整合性チェック ====="
+if verify_all; then
+  echo "OK: 必要な全ファイルが実データとして揃っています。"
+else
+  echo ""
+  echo "⚠ 不足/不正ファイル:$MISSING"
+  echo "  不足があれば HTTPS で取得します。"
+  if [ "$FORCE_HTTPS" = true ]; then
+    https_download
   else
-    echo "注意: 辞書が LFS ポインタのままです。HTTPS で取得し直します。"
+    FORCE_HTTPS=true
     https_download
   fi
-else
-  https_download
+  if verify_all; then
+    echo "OK: 再取得後、必要な全ファイルが揃いました。"
+  else
+    echo ""
+    echo "ERROR: 再取得後も不足しています。"
+    echo "  不足ファイル:$MISSING"
+    echo "  ネットワーク/権限を確認し、./download.sh --force-https を再実行してください。"
+    exit 1
+  fi
 fi
 
 echo ""
