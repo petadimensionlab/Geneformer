@@ -361,6 +361,48 @@ env ADPD_TISSUE=<TISSUE> .venv/bin/python analysis/04b_extract_embeddings.py
 (tokenize+probe、図、fine-tune)は、その `.h5ad` をこのワークスペースの
 `analysis/` スクリプトで実行します。
 
+## DirectML (Windows / WSL2 + AMD GPU)
+
+Geneformer は **DirectML** (`torch-directml`) 経由で Windows または WSL2 上の
+AMD GPU でも動作します。`GENEFORMER_DEVICE=dml` で有効化します。
+
+### 検証済み構成
+
+| 項目 | 値 |
+|---|---|
+| GPU | AMD Radeon(TM) 8060S Graphics |
+| ドライバー | 32.0.22032.6002 (2025-12-15) |
+| 専用 GPU メモリ | 4.0 GB |
+| 共有 GPU メモリ | 43.6 GB |
+| GPU メモリ (合計) | 47.6 GB |
+| `forward_batch_size` | **4** (下記参照) |
+
+### バッチサイズ
+
+埋め込み抽出スクリプト (`04_baseline.py`, `04b_extract_embeddings.py`) は
+`forward_batch_size=4` を使用します。これは AMD Radeon 8060S (共有 GPU メモリ
+43.6 GB) 向けに調整されています。
+
+データセットは系列長の降順でソートされる（最長の細胞が最初に来る）ため、
+最初のバッチには常に最長の系列（最大 3,861 トークン）が含まれます。3,861 トークン
+の 4 細胞バッチは `(4, 3861, 768)` の隠れ状態テンソル（約 45 MB）に加えて、
+中間のアテンション行列（O(n²) メモリ）を生成します。8 細胞ではアテンション行列が
+2 倍になり、この GPU では **segfault**（DML の OOM がクリーンなエラーにならず）
+が発生していました。`forward_batch_size=4` が安全な上限です。
+
+GPU の共有メモリが**より少ない**場合はさらに減らしてください（例:
+`forward_batch_size=2`）。**より多い**場合は増やせますが、必ず最長系列で
+テストしてください。
+
+### DML セットアップ
+
+```bash
+# torch-directml のインストール (詳細は docs/directml_setup.md)
+uv pip install --python .venv/bin/python torch-directml
+# DML バックエンドで実行
+GENEFORMER_DEVICE=dml .venv/bin/python analysis/04_baseline.py
+```
+
 ## ROCm on Windows / WSL2
 
 **この Mac では検証不可**(macOS は WSL2 を実行できない)。実装は完了しています

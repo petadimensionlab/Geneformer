@@ -118,7 +118,7 @@ else:
         emb_layer=-1,
         emb_label=LABEL_COLUMNS,
         labels_to_plot=["celltype", "split"],
-        forward_batch_size=32,
+        forward_batch_size=4,
         nproc=8,
         model_version="V2",
     )

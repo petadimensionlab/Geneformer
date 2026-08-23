@@ -92,7 +92,7 @@ def move_to_device(model: torch.nn.Module) -> torch.nn.Module:
 
 
 def empty_cache() -> None:
-    """Best-effort accelerator cache clear. No-op on MPS/CPU."""
+    """Best-effort accelerator cache clear. No-op on MPS/CPU/DML."""
     name = get_device()
     if name == "cuda" and torch.cuda.is_available():
         torch.cuda.empty_cache()

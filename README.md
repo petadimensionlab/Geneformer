@@ -372,6 +372,48 @@ maps mouse→human orthologs and assembles the `.h5ad`).
 (tokenize + probe, figures, fine-tune) run in this workspace's `analysis/`
 scripts on the resulting `.h5ad`.
 
+## DirectML (Windows / WSL2 with AMD GPU)
+
+Geneformer can also run on **DirectML** (`torch-directml`) on Windows or WSL2
+with an AMD GPU. This is configured via `GENEFORMER_DEVICE=dml`.
+
+### Verified configuration
+
+| Item | Value |
+|---|---|
+| GPU | AMD Radeon(TM) 8060S Graphics |
+| Driver | 32.0.22032.6002 (2025-12-15) |
+| Dedicated GPU memory | 4.0 GB |
+| Shared GPU memory | 43.6 GB |
+| GPU memory (total) | 47.6 GB |
+| `forward_batch_size` | **4** (see below) |
+
+### Batch size
+
+The embedding extraction scripts (`04_baseline.py`, `04b_extract_embeddings.py`)
+use `forward_batch_size=4`. This is tuned for the AMD Radeon 8060S with 43.6 GB
+shared GPU memory.
+
+The dataset is sorted by descending sequence length (longest cells first), so the
+first batch always contains the longest sequences (up to 3,861 tokens). A batch
+of 4 cells at 3,861 tokens produces a `(4, 3861, 768)` hidden-state tensor
+(~45 MB) plus the intermediate attention matrices (O(n²) memory). With 8 cells
+the attention matrix doubles and caused **segfaults** (DML OOM without a clean
+error) on this GPU. `forward_batch_size=4` is the safe upper bound.
+
+If your GPU has **less** shared memory, reduce it further (e.g. `forward_batch_size=2`).
+If your GPU has **more** memory, you can increase it, but always test with the
+longest sequences first.
+
+### DML setup
+
+```bash
+# Install torch-directml (see docs/directml_setup.md for details)
+uv pip install --python .venv/bin/python torch-directml
+# Run with DML backend
+GENEFORMER_DEVICE=dml .venv/bin/python analysis/04_baseline.py
+```
+
 ## ROCm on Windows / WSL2
 
 **Not verifiable on this Mac** (macOS cannot run WSL2). The implementation is
