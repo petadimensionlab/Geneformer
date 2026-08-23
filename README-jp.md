@@ -79,6 +79,13 @@ Apple Silicon 上でエンドツーエンド実行:
      `gradient_checkpointing: True`(`use_reentrant: False`)を有効化 —
      実効バッチ / オプティマイザ挙動は変えずに活性化メモリを約 1/2.3 化。
      スワップ解消もあり ~6 s/it(従来比 ~4 倍高速)で、1 epoch は数時間で完了。
+   - **不完全チェックポイントの復旧**: 以前の fine-tune が`trainer.save_model()`
+     が重みを書き出す前に中断された場合(MPS OOM など)、
+     `<TISSUE>/runs/<prefix>.../ksplitN/` ディレクトリは**空のまま**残ることがあります。
+     `06_finetune.py` は実際に重み(`pytorch_model.bin` / `model.safetensors` /
+     `adapter_model.bin`)を含む場合のみチェックポイントを再利用可能とみなし、
+     空・不完全な `ksplit*` ディレクトリは自動削除して、モデルファイル欠落エラーになる
+     代わりに新規 fine-tune を実行します。
 4. **In silico perturbation**(`analysis/07_in_silico_perturbation.py`、チュートリアル
    ノートブック移植)— MPS で**動作**。
 

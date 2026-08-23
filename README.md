@@ -76,12 +76,19 @@ Ran end-to-end on Apple Silicon:
      | batch 4, no checkpointing           | ~68 GiB         |
      | **batch 8 + gradient checkpointing**| **~64 GiB**     |
 
-     Fix applied in `06_finetune.py`: keep
-     `per_device_train_batch_size: 8` and enable
-     `gradient_checkpointing: True` (`use_reentrant: False`) — same effective
-     batch / optimizer dynamics, ~2.3x less activation memory. Runs at
-     ~6 s/it (~4x faster than before, which was swapping) with an ETA of a few
-     hours for the full epoch.
+Fix applied in `06_finetune.py`: keep
+      `per_device_train_batch_size: 8` and enable
+      `gradient_checkpointing: True` (`use_reentrant: False`) — same effective
+      batch / optimizer dynamics, ~2.3x less activation memory. Runs at
+      ~6 s/it (~4x faster than before, which was swapping) with an ETA of a few
+      hours for the full epoch.
+   - **Incomplete-checkpoint recovery:** if a prior fine-tune run is interrupted
+     (e.g. MPS OOM) before `trainer.save_model()` writes weights, the
+     `<TISSUE>/runs/<prefix>.../ksplitN/` dir may be left **empty**. `06_finetune.py`
+     treats a checkpoint as reusable only if it actually contains saved weights
+     (`pytorch_model.bin` / `model.safetensors` / `adapter_model.bin`); any empty
+     or incomplete `ksplit*` dir is deleted automatically so a fresh fine-tune
+     runs instead of erroring on a missing model file.
 4. **In silico perturbation** (`analysis/07_in_silico_perturbation.py`, ported
    from the tutorial notebook) — **works** on MPS.
 

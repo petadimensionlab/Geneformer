@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import os
 import pickle
+import shutil
 import sys
 from pathlib import Path
 
@@ -131,8 +132,27 @@ else:
 
 # ------------------------------------------------------------------- training
 checkpoints = sorted(RUN_DIR.glob(f"*geneformer_cellClassifier_{RUN_PREFIX}/ksplit1"))
+
+
+def _valid_checkpoint(path) -> bool:
+    """A checkpoint is reusable only if it actually holds saved model weights."""
+    if not path.is_dir():
+        return False
+    return any(
+        path.joinpath(name).exists()
+        for name in ("pytorch_model.bin", "model.safetensors", "adapter_model.bin")
+    )
+
+
+# Drop checkpoint dirs that are empty/incomplete so training re-runs fresh.
+for stale in sorted(RUN_DIR.glob(f"*geneformer_cellClassifier_{RUN_PREFIX}/ksplit*")):
+    if not _valid_checkpoint(stale):
+        print(f"removing incomplete checkpoint dir: {stale}", flush=True)
+        shutil.rmtree(stale, ignore_errors=True)
+checkpoints = [c for c in checkpoints if _valid_checkpoint(c)]
+
 if not checkpoints:
-    print("fine-tuning (1 epoch, first 6 layers frozen)...", flush=True)
+    print("fine-tuning (retune, 1 epoch, first 6 layers frozen)...", flush=True)
     classifier.validate(
         model_directory=str(MODEL_DIR),
         prepared_input_data_file=str(prepared_train),
@@ -143,7 +163,8 @@ if not checkpoints:
         n_hyperopt_trials=0,
     )
     checkpoints = sorted(RUN_DIR.glob(f"*geneformer_cellClassifier_{RUN_PREFIX}/ksplit1"))
-    assert checkpoints, "training finished without a ksplit1 checkpoint"
+    checkpoints = [c for c in checkpoints if _valid_checkpoint(c)]
+    assert checkpoints, "training finished without a valid (non-empty) ksplit1 checkpoint"
 else:
     print("reusing existing checkpoint", flush=True)
 
