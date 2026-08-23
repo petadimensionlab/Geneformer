@@ -113,8 +113,18 @@ clone_and_lfs_pull() {
 # ------------------------------------------------------------ 直接 HTTPS 取得
 https_download() {
   check_prereq curl || { echo "エラー: curl が必要です。" >&2; exit 1; }
+  check_prereq git || { echo "エラー: git が必要です(コード取得のため)。" >&2; exit 1; }
 
   echo "git-lfs を使用せず直接 HTTPS でダウンロードします。"
+
+  # コード本体(setup.py, pyproject.toml, geneformer/*.py 等)も取得する。
+  # git-lfs が使えない環境でも、リポジトリ全体を shallow クローンしてコードを確保し、
+  # 重い LFS バイナリだけを curl で取得する。
+  if [ ! -d "$GENEFORMER_DIR/.git" ]; then
+    echo "  [コード] リポジトリを shallow クローン (git-lfs skip) ..."
+    GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 "$GF_REPO_URL" "$GENEFORMER_DIR"
+  fi
+
   local base_url="https://${HF_MIRROR}/ctheodoris/Geneformer/resolve/main"
 
   # モデルディレクトリのファイル
