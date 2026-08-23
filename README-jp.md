@@ -122,6 +122,7 @@ num_proc=nproc)` で perturbation `Dataset` を構築します。3 つの別々�
 cd geneformer_hf
 git apply ../patches/geneformer_multibackend.patch   # cwd 非依存。どのユーザーでも動作
 cp ../patches/device.py geneformer/device.py        # 新規ファイル(未追跡)
+cp ../patches/pyproject.toml .                       # `uv pip install -e` に必要(uv は pyproject.toml を要求)
 cd ..
 
 # 2. 環境作成

@@ -128,6 +128,7 @@ Env vars used by `07`: `IS_NPROC` (default 1), `IS_MAX_CELLS` (default 200).
 cd geneformer_hf
 git apply ../patches/geneformer_multibackend.patch   # cwd-independent, works for any user
 cp ../patches/device.py geneformer/device.py         # new file (untracked)
+cp ../patches/pyproject.toml .                       # needed for `uv pip install -e` (uv requires pyproject.toml)
 cd ..
 
 # 2. Create env
