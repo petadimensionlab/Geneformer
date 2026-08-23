@@ -167,6 +167,8 @@ https_download() {
       "$base_url/geneformer/$f" -o "$dest"
   done
 
+  ensure_pyproject_toml
+
   echo "HTTPS 取得完了。"
 }
 
@@ -205,6 +207,24 @@ verify_all() {
     return 1
   fi
   return 0
+}
+
+# ensure_pyproject_toml: uv での `-e` インストールに必要な pyproject.toml を生成する。
+# upstream ctheodoris/Geneformer は pyproject.toml を git 管理しておらず、
+# setup.py のみを持つ。そのため verify_all が必須としている pyproject.toml は
+# clone/https いずれの経路でも生成されず、素の環境では必ず不足する。
+# ここで最小構成の pyproject.toml を用意する(存在すれば触らない)。
+ensure_pyproject_toml() {
+  local dest="$GENEFORMER_DIR/pyproject.toml"
+  if [ -f "$dest" ]; then
+    return 0
+  fi
+  echo "  [pyproject.toml] 最小構成を生成 (upstream は未管理のため) ..."
+  cat > "$dest" <<'EOF'
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+EOF
 }
 
 echo ""

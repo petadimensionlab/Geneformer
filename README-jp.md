@@ -122,7 +122,6 @@ num_proc=nproc)` で perturbation `Dataset` を構築します。3 つの別々�
 cd geneformer_hf
 git apply ../patches/geneformer_multibackend.patch   # cwd 非依存。どのユーザーでも動作
 cp ../patches/device.py geneformer/device.py        # 新規ファイル(未追跡)
-cp ../patches/pyproject.toml .                       # `uv pip install -e` に必要(uv は pyproject.toml を要求)
 cd ..
 
 # 2. 環境作成
@@ -168,9 +167,11 @@ uv pip install --python .venv/bin/python "datasets==4.0.0"
 `model.safetensors`, `config.json`, `generation_config.json`,
 `training_args.bin`, `geneformer/*.pkl` の辞書4点, `setup.py`,
 `pyproject.toml` が **LFS ポインタではなく実データ**(最小サイズ以上)として
-存在するかを確認します。不足またはポインタのままなら HTTPS で再取得し、
-それでも揃わなければ非ゼロで失敗します — つまり「成功」は本当に使える
-状態であることを保証します。
+存在するかを確認します。`pyproject.toml` は upstream が未管理(Geneformer は
+`setup.py` のみ)のため、`download.sh` がダウンロード後に最小構成を自動生成
+します — 手動の `cp` は不要です。不足またはポインタのままなら HTTPS で
+再取得し、それでも揃わなければ非ゼロで失敗します — つまり「成功」は本当に
+使える状態であることを保証します。
 ただし、ファイルが存在しても LFS ポインタのままの場合は `--force-https` が
 取得し直します。
 

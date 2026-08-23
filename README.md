@@ -128,7 +128,6 @@ Env vars used by `07`: `IS_NPROC` (default 1), `IS_MAX_CELLS` (default 200).
 cd geneformer_hf
 git apply ../patches/geneformer_multibackend.patch   # cwd-independent, works for any user
 cp ../patches/device.py geneformer/device.py         # new file (untracked)
-cp ../patches/pyproject.toml .                       # needed for `uv pip install -e` (uv requires pyproject.toml)
 cd ..
 
 # 2. Create env
@@ -177,9 +176,11 @@ is an LFS pointer, `--force-https` re-fetches it.
 that `model.safetensors`, `config.json`, `generation_config.json`,
 `training_args.bin`, all four `geneformer/*.pkl` dictionaries, `setup.py`, and
 `pyproject.toml` exist as **real data** (not LFS pointers) with a minimum size.
-If anything is missing or still a pointer, `download.sh` re-fetches it over
-HTTPS and fails with a non-zero exit if it is still incomplete — so a "success"
-means the checkout is genuinely usable.
+`pyproject.toml` is not tracked upstream (Geneformer ships `setup.py` only), so
+`download.sh` auto-generates a minimal one after the download — no manual
+`cp` step is needed. If anything is missing or still a pointer, `download.sh`
+re-fetches it over HTTPS and fails with a non-zero exit if it is still
+incomplete — so a "success" means the checkout is genuinely usable.
 
 ## Downloaded files
 
