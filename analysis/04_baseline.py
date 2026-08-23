@@ -55,7 +55,7 @@ LABEL_COLUMNS = ["cell_id", "individual", "celltype", "split"]
 # ------------------------------------------------------------------ tokenize
 import anndata as _ad
 
-_h5ad = next(INPUT_DIR.glob("*.h5ad"), None)
+_h5ad = next((p for p in INPUT_DIR.glob("*.h5ad") if not p.name.startswith(".")), None)
 if _h5ad is None:
     raise SystemExit(f"no .h5ad found in {INPUT_DIR}; run 03_map_and_build_h5ad.py first")
 _obs_cols = list(_ad.read_h5ad(_h5ad, backed="r").obs.columns)

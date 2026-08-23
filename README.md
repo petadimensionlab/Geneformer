@@ -56,9 +56,10 @@ Ran end-to-end on Apple Silicon:
      (`norm_factor_vector` and `coding_miRNA_ids`).
    - On Linux, the tokenizer can also fail with
      `OSError: Unable to synchronously open file (file signature not found)`
-     when the input dir contains **macOS AppleDouble metadata files**
-     (`._*.h5ad`, created on SMB/NFS or Mac→Linux copy). The patch skips any
-     file whose name starts with `._` in `tokenize_files`.
+     when the input dir contains **hidden files** such as macOS AppleDouble
+     metadata (`._*.h5ad`, `.DS_Store`, created on SMB/NFS or Mac→Linux copy).
+     The patch skips any file whose name starts with `.` in `tokenize_files`,
+     and `04_baseline.py` excludes hidden `.h5ad` files when globbing.
 2. **Frozen-embedding + probe** (`analysis/04_baseline.py`) — **works** on MPS.
    - `analysis/smoke_mps.py` verifies MPS vs CPU outputs agree to ~1.9e-5.
 3. **Fine-tuning** (`analysis/06_finetune.py`) — **works** on MPS (uses

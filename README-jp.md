@@ -53,11 +53,12 @@ Apple Silicon 上でエンドツーエンド実行:
       選びます。`patches/geneformer_multibackend.patch` は `tokenize_anndata` 内の
       `norm_factor_vector` と `coding_miRNA_ids` で `.iloc[coding_miRNA_loc]`(位置検索)
       を使うよう修正します。
-   - Linux では、入力ディレクトリに **macOS の AppleDouble メタファイル**
-     (`._*.h5ad`。SMB/NFS や Mac→Linux コピーで混入)があると、
+- Linux では、入力ディレクトリに **隠しファイル**(macOS の AppleDouble メタ
+    ファイル `._*.h5ad` や `.DS_Store`。SMB/NFS や Mac→Linux コピーで混入)があると、
      `OSError: Unable to synchronously open file (file signature not found)`
      でトークナイズが失敗することがあります。patch は `tokenize_files` で
-     `._` で始まるファイルをスキップします。
+     `.` で始まるファイルをスキップし、`04_baseline.py` も glob 時に
+     隠し `.h5ad` を除外します。
 2. **Frozen-embedding + probe**(`analysis/04_baseline.py`)— MPS で**動作**。
    - `analysis/smoke_mps.py` が MPS vs CPU の出力一致を ~1.9e-5 で検証。
 3. **Fine-tuning**(`analysis/06_finetune.py`)— MPS で**動作**(HF `Trainer` 使用。

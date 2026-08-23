@@ -357,7 +357,7 @@ index 8af0cfa..98e6cdb 100644
          else:
              file_match = f"*{input_identifier}*.{file_format}"
          for file_path in data_directory.glob(file_match):
-+            if file_path.name.startswith("._"):  # skip macOS AppleDouble metadata files
++            if file_path.name.startswith("."):  # skip hidden files (._*.h5ad, .DS_Store, ...)
 +                continue
              file_found = 1
              print(f"Tokenizing {file_path}")
