@@ -9,10 +9,11 @@ Supported device names:
 - ``cuda`` : NVIDIA CUDA **or** AMD ROCm. ROCm exposes the CUDA API, so a ROCm
   build reports ``torch.cuda.is_available() == True`` and is driven through the
   same code path.
+- ``dml``  : DirectML via ``torch-directml`` (Windows / WSL2).
 - ``mps``  : Apple Silicon Metal Performance Shader (Mac MPS).
 - ``cpu``  : CPU fallback.
 
-Auto-detection priority is CUDA/ROCm > MPS > CPU. Set ``GENEFORMER_DEVICE`` to
+Auto-detection priority is DML > CUDA/ROCm > MPS > CPU. Set ``GENEFORMER_DEVICE`` to
 force a specific backend (e.g. ``GENEFORMER_DEVICE=mps`` on a Mac that also has
 CUDA available via a remote/egpu setup).
 """
@@ -22,11 +23,31 @@ import os
 
 import torch
 
-_VALID = {"cuda", "mps", "cpu"}
+_VALID = {"cuda", "dml", "mps", "cpu"}
+
+
+_DML_CHECKED: bool = False
+_DML_AVAILABLE: bool = False
+
+
+def _dml_available() -> bool:
+    global _DML_CHECKED, _DML_AVAILABLE
+    if _DML_CHECKED:
+        return _DML_AVAILABLE
+    _DML_CHECKED = True
+    try:
+        import torch_directml  # noqa: F401
+
+        _DML_AVAILABLE = True
+    except (ImportError, OSError):
+        _DML_AVAILABLE = False
+    return _DML_AVAILABLE
 
 
 def _detect() -> str:
     """Return the best available device name without consulting the override."""
+    if _dml_available():
+        return "dml"
     if torch.cuda.is_available():
         return "cuda"
     mps = getattr(torch.backends, "mps", None)
@@ -36,7 +57,7 @@ def _detect() -> str:
 
 
 def get_device() -> str:
-    """Return the resolved device name (``cuda``, ``mps``, or ``cpu``).
+    """Return the resolved device name (``cuda``, ``dml``, ``mps``, or ``cpu``).
 
     Honors the ``GENEFORMER_DEVICE`` environment variable override.
     """
@@ -53,7 +74,12 @@ def get_device() -> str:
 
 def get_device_obj() -> torch.device:
     """Return a ``torch.device`` for the resolved accelerator."""
-    return torch.device(get_device())
+    name = get_device()
+    if name == "dml":
+        import torch_directml
+
+        return torch_directml.device()
+    return torch.device(name)
 
 
 def move_to_device(model: torch.nn.Module) -> torch.nn.Module:
@@ -67,12 +93,14 @@ def move_to_device(model: torch.nn.Module) -> torch.nn.Module:
 
 def empty_cache() -> None:
     """Best-effort accelerator cache clear. No-op on MPS/CPU."""
-    if torch.cuda.is_available():
+    name = get_device()
+    if name == "cuda" and torch.cuda.is_available():
         torch.cuda.empty_cache()
 
 
 def manual_seed_all(seed: int) -> None:
-    """Seed all available generators (CUDA/ROCm aware)."""
+    """Seed all available generators."""
     torch.manual_seed(seed)
-    if torch.cuda.is_available():
+    name = get_device()
+    if name == "cuda" and torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
