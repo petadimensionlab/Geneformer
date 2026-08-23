@@ -124,12 +124,10 @@ Env vars used by `07`: `IS_NPROC` (default 1), `IS_MAX_CELLS` (default 200).
 #    geneformer_hf/, then apply the multi-backend (MPS/CUDA/ROCm) device patches.
 #    Use --force-https: git-lfs silently leaves files as LFS pointers on some
 #    hosts (see "Model weights are LFS-tracked" below).
-#    IMPORTANT: the patch paths are relative to geneformer_hf/, so cd there
-#    first. Running `patch` from the repo root fails with "File to patch:".
 ./download.sh --force-https
 cd geneformer_hf
-patch -p1 < ../patches/geneformer_multibackend.patch
-cp ../patches/device.py geneformer/device.py        # new file (untracked)
+git apply ../patches/geneformer_multibackend.patch   # cwd-independent, works for any user
+cp ../patches/device.py geneformer/device.py         # new file (untracked)
 cd ..
 
 # 2. Create env

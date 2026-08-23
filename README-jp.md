@@ -118,11 +118,9 @@ num_proc=nproc)` で perturbation `Dataset` を構築します。3 つの別々�
 #    取得し、マルチバックエンド(MPS/CUDA/ROCm)の device パッチを適用する。
 #    --force-https を使うこと: 一部のホストでは git-lfs がファイルを LFS
 #    ポインタのまま残す(後述の「モデル重みは LFS 管理」を参照)。
-#    重要: パッチのパスは geneformer_hf/ 基準なので、先に cd すること。
-#    リポジトリ root から patch を実行すると "File to patch:" で止まります。
 ./download.sh --force-https
 cd geneformer_hf
-patch -p1 < ../patches/geneformer_multibackend.patch
+git apply ../patches/geneformer_multibackend.patch   # cwd 非依存。どのユーザーでも動作
 cp ../patches/device.py geneformer/device.py        # 新規ファイル(未追跡)
 cd ..
 
