@@ -149,14 +149,15 @@ https_download() {
 
   # パッケージ辞書 (全モデル共通で必要)
   local dict_files=(
-    "token_dictionary_gc104M.pkl"
-    "gene_median_dictionary_gc104M.pkl"
-    "ensembl_mapping_dict_gc104M.pkl"
-    "gene_name_id_dict_gc104M.pkl"
+    "token_dictionary_gc104M.pkl:400000"
+    "gene_median_dictionary_gc104M.pkl:1000000"
+    "ensembl_mapping_dict_gc104M.pkl:3000000"
+    "gene_name_id_dict_gc104M.pkl:1000000"
   )
-  for f in "${dict_files[@]}"; do
+  for entry in "${dict_files[@]}"; do
+    local f="${entry%%:*}" min="${entry##*:}"
     local dest="$GENEFORMER_DIR/geneformer/$f"
-    if is_real_pkl "$dest"; then
+    if is_real "$dest" "$min"; then
       echo "  スキップ (既存・実データ): geneformer/$f"
       continue
     fi
