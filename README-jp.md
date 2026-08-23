@@ -46,8 +46,13 @@ Apple Silicon 上でエンドツーエンド実行:
 1. **トークナイゼーション** `input/PD_smallint/PD_smallint.h5ad`
    (64,614 cells、25 cell types)→ `analysis_ws/tokenized/PD_smallint.dataset`
    — **動作**。
-   - 必要だった修正: `use_h5ad_index=True`(var index がすでに ENSG ID を持つ)、
-     および var index が文字列 Series の場合の `tokenize_anndata` 位置インデックス。
+- 必要だった修正: `use_h5ad_index=True`(var index がすでに ENSG ID を持つ)、
+      および var index が文字列 Series の場合の `tokenize_anndata` 位置インデックス。
+      upstream のコードは pandas の `var["ensembl_id_collapsed"]` Series に整数位置を
+      `[...]` で渡すため、gene 名 index に対する**ラベル検索**になり、誤った遺伝子を
+      選びます。`patches/geneformer_multibackend.patch` は `tokenize_anndata` 内の
+      `norm_factor_vector` と `coding_miRNA_ids` で `.iloc[coding_miRNA_loc]`(位置検索)
+      を使うよう修正します。
 2. **Frozen-embedding + probe**(`analysis/04_baseline.py`)— MPS で**動作**。
    - `analysis/smoke_mps.py` が MPS vs CPU の出力一致を ~1.9e-5 で検証。
 3. **Fine-tuning**(`analysis/06_finetune.py`)— MPS で**動作**(HF `Trainer` 使用。

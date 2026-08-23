@@ -48,7 +48,12 @@ Ran end-to-end on Apple Silicon:
    25 cell types) → `analysis_ws/tokenized/PD_smallint.dataset` — **works**.
    - Required fixes: `use_h5ad_index=True` (var index already holds ENSG IDs),
      and `tokenize_anndata` positional indexing when the var index is a string
-     series.
+     series. The upstream code indexes the pandas `var["ensembl_id_collapsed"]`
+     Series with integer positions via `[...]`, which does **label-based**
+     lookup on the gene-name index and selects wrong genes. The
+     `patches/geneformer_multibackend.patch` fixes this by using
+     `.iloc[coding_miRNA_loc]` (positional) in `tokenize_anndata`
+     (`norm_factor_vector` and `coding_miRNA_ids`).
 2. **Frozen-embedding + probe** (`analysis/04_baseline.py`) — **works** on MPS.
    - `analysis/smoke_mps.py` verifies MPS vs CPU outputs agree to ~1.9e-5.
 3. **Fine-tuning** (`analysis/06_finetune.py`) — **works** on MPS (uses

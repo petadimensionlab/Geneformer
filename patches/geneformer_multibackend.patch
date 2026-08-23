@@ -353,20 +353,22 @@ diff --git a/geneformer/tokenizer.py b/geneformer/tokenizer.py
 index 8af0cfa..846e290 100644
 --- a/geneformer/tokenizer.py
 +++ b/geneformer/tokenizer.py
-@@ -538,13 +538,11 @@ class TranscriptomeTokenizer:
+@@ -538,13 +538,13 @@ class TranscriptomeTokenizer:
          coding_miRNA_loc = np.where(
              [self.genelist_dict.get(i, False) for i in adata.var["ensembl_id_collapsed"]]
          )[0]
-+        collapsed_ids = adata.var["ensembl_id_collapsed"].to_numpy()
          norm_factor_vector = np.array(
 -            [
 -                self.gene_median_dict[i]
 -                for i in adata.var["ensembl_id_collapsed"][coding_miRNA_loc]
 -            ]
-+            [self.gene_median_dict[i] for i in collapsed_ids[coding_miRNA_loc]]
++            [
++                self.gene_median_dict[i]
++                for i in adata.var["ensembl_id_collapsed"].iloc[coding_miRNA_loc]
++            ]
          )
 -        coding_miRNA_ids = adata.var["ensembl_id_collapsed"][coding_miRNA_loc]
-+        coding_miRNA_ids = collapsed_ids[coding_miRNA_loc]
++        coding_miRNA_ids = adata.var["ensembl_id_collapsed"].iloc[coding_miRNA_loc]
          coding_miRNA_tokens = np.array(
              [self.gene_token_dict[i] for i in coding_miRNA_ids]
          )
