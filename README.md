@@ -64,6 +64,24 @@ Ran end-to-end on Apple Silicon:
    - `analysis/smoke_mps.py` verifies MPS vs CPU outputs agree to ~1.9e-5.
 3. **Fine-tuning** (`analysis/06_finetune.py`) — **works** on MPS (uses
    Hugging Face `Trainer`, which already supports MPS).
+   - **Memory budget (M4 Max, 128 GB unified memory):** the collator pads each
+     batch to its longest cell (PD_BM: median 1201 tokens, max 4096), and one
+     train step at that worst-case length peaks at ~145 GiB with plain
+     backward → MPS OOM (`max allowed: 182.78 GiB`) within a few steps.
+     `analysis/measure_mps_batch.py` measures this empirically per batch size:
+
+     | config (L=4096 worst case)          | peak MPS memory |
+     |-------------------------------------|-----------------|
+     | batch 8, no checkpointing           | ~145 GiB (OOM)  |
+     | batch 4, no checkpointing           | ~68 GiB         |
+     | **batch 8 + gradient checkpointing**| **~64 GiB**     |
+
+     Fix applied in `06_finetune.py`: keep
+     `per_device_train_batch_size: 8` and enable
+     `gradient_checkpointing: True` (`use_reentrant: False`) — same effective
+     batch / optimizer dynamics, ~2.3x less activation memory. Runs at
+     ~6 s/it (~4x faster than before, which was swapping) with an ETA of a few
+     hours for the full epoch.
 4. **In silico perturbation** (`analysis/07_in_silico_perturbation.py`, ported
    from the tutorial notebook) — **works** on MPS.
 

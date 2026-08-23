@@ -63,6 +63,22 @@ Apple Silicon 上でエンドツーエンド実行:
    - `analysis/smoke_mps.py` が MPS vs CPU の出力一致を ~1.9e-5 で検証。
 3. **Fine-tuning**(`analysis/06_finetune.py`)— MPS で**動作**(HF `Trainer` 使用。
    こちらは MPS をサポート済み)。
+   - **メモリ予算(M4 Max・ユニファイドメモリ 128 GB)**: collator はバッチ内の
+     最長セルに合わせてパディングするため(PD_BM: 中央値 1201 トークン、最大
+     4096)、最悪長の 1 train step は素の backward で ~145 GiB に達し、数ステップ
+     で MPS OOM(`max allowed: 182.78 GiB`)になります。`analysis/measure_mps_batch.py`
+     がバッチサイズごとに実測します:
+
+     | 設定(L=4096 最悪ケース)              | MPS ピークメモリ |
+     |---------------------------------------|------------------|
+     | batch 8、checkpointing 無し           | ~145 GiB(OOM)   |
+     | batch 4、checkpointing 無し           | ~68 GiB          |
+     | **batch 8 + gradient checkpointing**  | **~64 GiB**      |
+
+     `06_finetune.py` への対応:`per_device_train_batch_size: 8` は維持しつつ
+     `gradient_checkpointing: True`(`use_reentrant: False`)を有効化 —
+     実効バッチ / オプティマイザ挙動は変えずに活性化メモリを約 1/2.3 化。
+     スワップ解消もあり ~6 s/it(従来比 ~4 倍高速)で、1 epoch は数時間で完了。
 4. **In silico perturbation**(`analysis/07_in_silico_perturbation.py`、チュートリアル
    ノートブック移植)— MPS で**動作**。
 

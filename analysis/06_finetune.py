@@ -92,8 +92,15 @@ classifier = Classifier(
     training_args={
         "num_train_epochs": 1,
         "learning_rate": 5e-5,
+        # Batch-size/memory budget measured on this machine (M4 Max 128 GB,
+        # analysis/measure_mps_batch.py): one train step at the worst-case
+        # padded length of 4096 tokens peaks at ~145 GiB WITHOUT gradient
+        # checkpointing (-> MPS OOM), but only ~64 GiB WITH it. Keep batch 8
+        # and checkpoint instead of shrinking the effective batch.
         "per_device_train_batch_size": 8,
         "per_device_eval_batch_size": 16,
+        "gradient_checkpointing": True,
+        "gradient_checkpointing_kwargs": {"use_reentrant": False},
         "seed": SEED,
         "save_strategy": "epoch",
         "logging_steps": 100,
