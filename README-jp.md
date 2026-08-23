@@ -233,6 +233,9 @@ datasets                    4.0.0   (固定 — 5.x は InSilicoPerturber.pertur
 書き出します:
 
 ```bash
+# リポジトリ root から実行(相対パス .venv/bin/python を解決するため)
+cd /path/to/Geneformer
+
 export GENEFORMER_DIR=$PWD/geneformer_hf        # Geneformer checkout + V2-104M
 export GENEFORMER_MODEL=Geneformer-V2-104M
 
@@ -245,6 +248,16 @@ ADPD_TISSUE=PD_blood  .venv/bin/python analysis/07_in_silico_perturbation.py
 # または ADPD_ROOT で直接指定も可(従来方式):
 #   ADPD_ROOT=$PWD/input/PD_blood
 ```
+
+> **リポジトリ root から実行すること。** スクリプトは相対パス
+> `.venv/bin/python` を使うため、他のディレクトリから実行すると
+> `no such file or directory: .venv/bin/python` で失敗します(パス解決自体は
+> cwd 非依存で、スクリプト位置から `input/` を特定します)。スクリプトの
+> `ADPD_TISSUE=... cmd` 構文は POSIX です。**csh/tcsh** 系シェル(`VAR=value cmd`
+> 非対応)の場合は `env` を使ってください:
+> ```bash
+> env ADPD_TISSUE=PD_blood .venv/bin/python analysis/05_figures.py
+> ```
 
 > **補足**
 > - `ADPD_TISSUE` は `input/` 下で `h5ad/*.h5ad` を持つフォルダ名を指定。

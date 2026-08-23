@@ -240,6 +240,9 @@ scripts use `input/<TISSUE>/` as the workspace root and write
 `tokenized/`, `results/`, `runs/` inside it:
 
 ```bash
+# Run from the repo root (so the relative path .venv/bin/python resolves).
+cd /path/to/Geneformer
+
 export GENEFORMER_DIR=$PWD/geneformer_hf        # Geneformer checkout + V2-104M
 export GENEFORMER_MODEL=Geneformer-V2-104M
 
@@ -252,6 +255,16 @@ ADPD_TISSUE=PD_blood  .venv/bin/python analysis/07_in_silico_perturbation.py
 # OR equivalent via a single tissue:
 #   ADPD_ROOT=$PWD/input/PD_blood  (legacy)  — both work
 ```
+
+> **Must run from the repo root.** The scripts use the relative path
+> `.venv/bin/python`, so running from another directory fails with
+> `no such file or directory: .venv/bin/python` (the resolver itself is
+> cwd-independent — it locates `input/` from the script path). The scripts'
+> `ADPD_TISSUE=... cmd` syntax is POSIX; if your shell is **csh/tcsh** (which
+> does not support `VAR=value cmd`), use `env` instead:
+> ```bash
+> env ADPD_TISSUE=PD_blood .venv/bin/python analysis/05_figures.py
+> ```
 
 > **Notes**
 > - `ADPD_TISSUE` must name a folder under `input/` that holds
