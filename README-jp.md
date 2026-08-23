@@ -114,11 +114,9 @@ num_proc=nproc)` で perturbation `Dataset` を構築します。3 つの別々�
 ## Setup (uv)
 
 ```bash
-# 1. Geneformer パッケージ(git-lfs クローン、重み込み ~7 GB)を geneformer_hf/ に
-#    取得し、マルチバックエンド(MPS/CUDA/ROCm)の device パッチを適用する。
-#    --force-https を使うこと: 一部のホストでは git-lfs がファイルを LFS
-#    ポインタのまま残す(後述の「モデル重みは LFS 管理」を参照)。
-./download.sh --force-https
+# 1. Geneformer パッケージ + 重みを geneformer_hf/ に取得(curl のみ・
+#    git / git-lfs 不要)、マルチバックエンド(MPS/CUDA/ROCm)の device パッチ適用。
+./download.sh
 cd geneformer_hf
 git apply ../patches/geneformer_multibackend.patch   # cwd 非依存。どのユーザーでも動作
 cp ../patches/device.py geneformer/device.py        # 新規ファイル(未追跡)
@@ -145,41 +143,37 @@ uv pip install --python .venv/bin/python "datasets==4.0.0"
 > ハング — 上記 IS perturbation の注を参照)。どちらも標準パイプラインを
 > 確実に動かすために必須です。
 
-モデル重みは LFS 管理。`download.sh` を使ってください:
+モデル重みの管理は upstream では LFS ですが、`download.sh` は git を全く
+使いません — 全ファイル(コード、重み、辞書)を `huggingface.co` から `curl` で
+直接取得します:
 
 ```bash
-./download.sh --force-https   # 推奨: 直接 HTTPS 取得(マシン間で最も確実)
-./download.sh                 # git-lfs 優先、git-lfs が無い場合のみ HTTPS にフォールバック
-./download.sh --all           # 全モデル (V1-10M, V2-104M, CLcancer, V2-316M)
+./download.sh              # V2-104M + パッケージコード + 辞書
+./download.sh --all        # 全モデル (V1-10M, V2-104M, CLcancer, V2-316M)
 # 対象変更: ./download.sh --model V1-10M
 ```
 
-**`--force-https` を使うこと。** 実際には git-lfs が一部のマシンでは成功しても、
-別のマシン(例: Linux)では失敗するか、ファイルを LFS ポインタのまま残すことが
-あります。そのまま使うと、後で `safetensors: header too large` や
-`pickle.UnpicklingError: invalid load key, 'v'` などのエラーで読み込みに失敗
-します。`--force-https` は全ファイル(モデル重み + `geneformer/*.pkl` 辞書)を
-`huggingface.co` から `curl` で直接取得し、git-lfs を完全に回避するため、
-最も再現性が高い方法です。環境変数 `GENEFORMER_DIR`(出力先)、`GF_REPO_URL`、
-`HF_MIRROR` で上書き可。既存ファイルはスキップされるので再実行も安全(冪等)。
+git-lfs を使わず素の `curl` で取得するため、git-lfs のインストール有無に
+かかわらずどのホストでも動きます — LFS smudge のハングや LFS ポインタ残存
+(git lfs の典型的な失敗)、`safetensors: header too large` /
+`pickle.UnpicklingError: invalid load key, 'v'` の読み込みエラーも起きません。
+環境変数 `GENEFORMER_DIR`(出力先)、`HF_MIRROR` で上書き可。既存ファイルは
+スキップされるので再実行も安全(冪等)。
 
 **実行のたびに全ファイルの整合性チェック(`verify_all`)を行います。**
-`model.safetensors`, `config.json`, `generation_config.json`,
-`training_args.bin`, `geneformer/*.pkl` の辞書4点, `setup.py`,
-`pyproject.toml` が **LFS ポインタではなく実データ**(最小サイズ以上)として
-存在するかを確認します。`pyproject.toml` は upstream が未管理(Geneformer は
-`setup.py` のみ)のため、`download.sh` がダウンロード後に最小構成を自動生成
-します — 手動の `cp` は不要です。不足またはポインタのままなら HTTPS で
-再取得し、それでも揃わなければ非ゼロで失敗します — つまり「成功」は本当に
-使える状態であることを保証します。
-ただし、ファイルが存在しても LFS ポインタのままの場合は `--force-https` が
-取得し直します。
+`setup.py` と `geneformer/*.py` のコード、`model.safetensors`、`config.json`、
+`generation_config.json`、`training_args.bin`、`geneformer/*.pkl` の辞書が
+**LFS ポインタではなく実データ**(最小サイズ以上)として存在するかを確認します。
+`pyproject.toml` は upstream が未管理(Geneformer は `setup.py` のみ)のため、
+`download.sh` がダウンロード後に最小構成を自動生成します — 手動の `cp` は
+不要です。不足があれば非ゼロで失敗します — つまり「成功」は本当に使える
+状態であることを保証します。
 
 ## ダウンロードされたファイル
 
-Geneformer リポジトリ(`geneformer_hf/`)は `ctheodoris/Geneformer` の git-lfs
-クローンで、`git lfs pull` がバイナリ重みとパッケージのトークン/メディアン辞書を
-取得します。実際にダウンロードされたファイル:
+Geneformer リポジトリ(`geneformer_hf/`)は `download.sh` が HTTPS で直接
+展開します(git 不要)。パッケージコード、V2-104M の重み、トークン/メディアン
+辞書を取得します。実際にダウンロードされるファイル:
 
 | ファイル | サイズ | 用途 |
 |---|---|---|
@@ -192,9 +186,9 @@ Geneformer リポジトリ(`geneformer_hf/`)は `ctheodoris/Geneformer` の git-
 | `geneformer_hf/geneformer/ensembl_mapping_dict_gc104M.pkl` | 3,957,652 B | Ensembl ID 折りたたみ/マッピング(V2) |
 | `geneformer_hf/geneformer/gene_name_id_dict_gc104M.pkl` | 1,660,882 B | Ensembl ID ↔ 遺伝子名(V2) |
 
-> V1-10M, V2-104M_CLcancer, V2-316M のディレクトリもクローンにはありますが、
-> 重みは**取得していません**(V2-104M のみ要求)。取得例:
-> `git lfs pull --include="Geneformer-V2-316M/*"`。
+> V1-10M, V2-104M_CLcancer, V2-316M の重みは既定では**取得しません**
+> (V2-104M のみ)。取得するには `./download.sh --model V2-316M` または
+> `./download.sh --all`。
 
 ## 環境 (uv + venv)
 

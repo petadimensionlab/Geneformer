@@ -120,11 +120,10 @@ Env vars used by `07`: `IS_NPROC` (default 1), `IS_MAX_CELLS` (default 200).
 ## Setup (uv)
 
 ```bash
-# 1. Get the geneformer package (git-lfs clone, ~7 GB with weights) into
-#    geneformer_hf/, then apply the multi-backend (MPS/CUDA/ROCm) device patches.
-#    Use --force-https: git-lfs silently leaves files as LFS pointers on some
-#    hosts (see "Model weights are LFS-tracked" below).
-./download.sh --force-https
+# 1. Download the geneformer package + weights into geneformer_hf/ (curl,
+#    no git / git-lfs needed), then apply the multi-backend (MPS/CUDA/ROCm)
+#    device patches.
+./download.sh
 cd geneformer_hf
 git apply ../patches/geneformer_multibackend.patch   # cwd-independent, works for any user
 cp ../patches/device.py geneformer/device.py         # new file (untracked)
@@ -151,42 +150,37 @@ uv pip install --python .venv/bin/python "datasets==4.0.0"
 > — see the in silico perturbation notes below). Both are required for the
 > standard pipeline to run reliably.
 
-Model weights are LFS-tracked. Use the provided `download.sh`:
+Model weights are stored via git-lfs upstream, but `download.sh` does **not**
+use git at all — it fetches every file (code, weights, dictionaries) directly
+from `huggingface.co` with `curl`:
 
 ```bash
-./download.sh --force-https   # RECOMMENDED: direct HTTPS download (most reliable across machines)
-./download.sh                 # git-lfs first, HTTPS fallback only if git-lfs is absent
-./download.sh --all           # all models (V1-10M, V2-104M, CLcancer, V2-316M)
+./download.sh              # V2-104M + package code + dictionaries
+./download.sh --all        # all models (V1-10M, V2-104M, CLcancer, V2-316M)
 # change the target model: ./download.sh --model V1-10M
 ```
 
-**Use `--force-https`.** In practice git-lfs succeeds on some machines but fails
-or silently leaves files as LFS pointers on others (e.g. Linux hosts), which
-later breaks loading with errors such as
-`safetensors: header too large` or
-`pickle.UnpicklingError: invalid load key, 'v'`. `--force-https` downloads every
-file (model weights + `geneformer/*.pkl` dictionaries) directly from
-`huggingface.co` with `curl`, bypassing git-lfs entirely, and is the most
-reproducible option. Overridable via the `GENEFORMER_DIR` (output dir),
-`GF_REPO_URL`, and `HF_MIRROR` environment variables. Existing files are
-skipped, so re-running is safe (idempotent); if a file is already present but
-is an LFS pointer, `--force-https` re-fetches it.
+Because it uses plain `curl` (not `git lfs`), it works on any host regardless
+of whether git-lfs is installed — no LFS smudge hangs, no LFS-pointer files
+(a common failure with `git lfs`), and no `safetensors: header too large` /
+`pickle.UnpicklingError: invalid load key, 'v'` load errors. Output dir is
+overridable via `GENEFORMER_DIR` and `HF_MIRROR`. Existing files are skipped,
+so re-running is safe (idempotent).
 
 **Every run ends with a full-file integrity check** (`verify_all`): it verifies
-that `model.safetensors`, `config.json`, `generation_config.json`,
-`training_args.bin`, all four `geneformer/*.pkl` dictionaries, `setup.py`, and
-`pyproject.toml` exist as **real data** (not LFS pointers) with a minimum size.
+that `setup.py`, `geneformer/*.py` code, `model.safetensors`, `config.json`,
+`generation_config.json`, `training_args.bin`, and all `geneformer/*.pkl`
+dictionaries exist as **real data** (not LFS pointers) with a minimum size.
 `pyproject.toml` is not tracked upstream (Geneformer ships `setup.py` only), so
 `download.sh` auto-generates a minimal one after the download — no manual
-`cp` step is needed. If anything is missing or still a pointer, `download.sh`
-re-fetches it over HTTPS and fails with a non-zero exit if it is still
-incomplete — so a "success" means the checkout is genuinely usable.
+`cp` step is needed. If anything is missing, `download.sh` fails with a
+non-zero exit — so a "success" means the checkout is genuinely usable.
 
 ## Downloaded files
 
-The Geneformer repo (`geneformer_hf/`) is a git-lfs clone of
-`ctheodoris/Geneformer`. `git lfs pull` fetches the binary weights and the
-package's token/median dictionaries. Files actually downloaded:
+The Geneformer repo (`geneformer_hf/`) is populated by `download.sh` via direct
+HTTPS download (no git needed). It fetches the package code, the V2-104M model
+weights, and the package's token/median dictionaries. Files actually downloaded:
 
 | File | Size | Purpose |
 |---|---|---|
@@ -199,9 +193,9 @@ package's token/median dictionaries. Files actually downloaded:
 | `geneformer_hf/geneformer/ensembl_mapping_dict_gc104M.pkl` | 3,957,652 B | Ensembl ID collapse/mapping (V2) |
 | `geneformer_hf/geneformer/gene_name_id_dict_gc104M.pkl` | 1,660,882 B | Ensembl ID ↔ gene name (V2) |
 
-> The V1-10M, V2-104M_CLcancer, and V2-316M directories are also present in
-> the clone but their weights were **not** pulled (only V2-104M was requested).
-> To fetch any of them: `git lfs pull --include="Geneformer-V2-316M/*"`.
+> The V1-10M, V2-104M_CLcancer, and V2-316M weights are **not** downloaded by
+> default (only V2-104M is). To fetch any of them: `./download.sh --model V2-316M`
+> or `./download.sh --all`.
 
 ## Environment (uv + venv)
 
