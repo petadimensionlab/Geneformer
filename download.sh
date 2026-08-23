@@ -155,8 +155,8 @@ https_download() {
   )
   for f in "${dict_files[@]}"; do
     local dest="$GENEFORMER_DIR/geneformer/$f"
-    if [ -s "$dest" ]; then
-      echo "  スキップ (既存): geneformer/$f"
+    if is_real_pkl "$dest"; then
+      echo "  スキップ (既存・実データ): geneformer/$f"
       continue
     fi
     echo "  取得: geneformer/$f"
