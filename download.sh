@@ -129,14 +129,15 @@ https_download() {
 
   # モデルディレクトリのファイル
   local model_files=(
-    "model.safetensors"
-    "config.json"
-    "generation_config.json"
-    "training_args.bin"
+    "model.safetensors:400000000"
+    "config.json:500"
+    "generation_config.json:80"
+    "training_args.bin:1000"
   )
-  for f in "${model_files[@]}"; do
+  for entry in "${model_files[@]}"; do
+    local f="${entry%%:*}" min="${entry##*:}"
     local dest="$GENEFORMER_DIR/$MODEL_DIR/$f"
-    if is_real "$dest"; then
+    if is_real "$dest" "$min"; then
       echo "  スキップ (既存・実データ): $MODEL_DIR/$f"
       continue
     fi
@@ -171,7 +172,7 @@ https_download() {
 # ---------------------------------------------------------------- 実行
 # is_real: 実データファイルか(LFS ポインタの先頭 'version https' でない + 最小サイズ)
 is_real() {
-  local f="$1" min_bytes="$2"
+  local f="${1:?is_real: file path required}" min_bytes="${2:-1}"
   [ -s "$f" ] && [ "$(stat -c %s "$f" 2>/dev/null || stat -f %z "$f")" -ge "$min_bytes" ] \
     && [[ "$(head -c 8 "$f")" != "version " ]]
 }
