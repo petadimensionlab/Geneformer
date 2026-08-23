@@ -350,25 +350,29 @@ index 6970612..8a58e22 100644
              )
  
 diff --git a/geneformer/tokenizer.py b/geneformer/tokenizer.py
-index 8af0cfa..846e290 100644
+index 8af0cfa..98e6cdb 100644
 --- a/geneformer/tokenizer.py
 +++ b/geneformer/tokenizer.py
-@@ -538,13 +538,13 @@ class TranscriptomeTokenizer:
-         coding_miRNA_loc = np.where(
-             [self.genelist_dict.get(i, False) for i in adata.var["ensembl_id_collapsed"]]
-         )[0]
+@@ -498,6 +498,8 @@ class TranscriptomeTokenizer:
+         else:
+             file_match = f"*{input_identifier}*.{file_format}"
+         for file_path in data_directory.glob(file_match):
++            if file_path.name.startswith("._"):  # skip macOS AppleDouble metadata files
++                continue
+             file_found = 1
+             print(f"Tokenizing {file_path}")
+             file_tokenized_cells, file_cell_metadata, file_tokenized_counts = tokenize_file_fn(file_path, file_format=file_format)
+@@ -541,10 +543,10 @@ class TranscriptomeTokenizer:
          norm_factor_vector = np.array(
--            [
--                self.gene_median_dict[i]
+             [
+                 self.gene_median_dict[i]
 -                for i in adata.var["ensembl_id_collapsed"][coding_miRNA_loc]
--            ]
-+            [
-+                self.gene_median_dict[i]
 +                for i in adata.var["ensembl_id_collapsed"].iloc[coding_miRNA_loc]
-+            ]
+             ]
          )
 -        coding_miRNA_ids = adata.var["ensembl_id_collapsed"][coding_miRNA_loc]
 +        coding_miRNA_ids = adata.var["ensembl_id_collapsed"].iloc[coding_miRNA_loc]
          coding_miRNA_tokens = np.array(
              [self.gene_token_dict[i] for i in coding_miRNA_ids]
          )
+
