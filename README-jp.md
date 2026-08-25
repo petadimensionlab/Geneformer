@@ -155,6 +155,11 @@ cd geneformer_hf
 git apply ../patches/geneformer_multibackend.patch   # cwd 非依存。どのユーザーでも動作
 cp ../patches/device.py geneformer/device.py        # 新規ファイル(未追跡)
 cd ..
+# `git apply` が失敗する場合(例: tokenizer.py を手で編集済み)は、用意済みの
+# 修正済みファイルを直接コピーして適用できます:
+#   cp patches/tokenizer.py geneformer_hf/geneformer/tokenizer.py
+#   cp patches/device.py    geneformer_hf/geneformer/device.py
+# (tokenizer.py には .iloc 位置インデックス修正と隠しファイルスキップが含まれます)
 
 # 2. 環境作成
 uv venv .venv --python 3.12
