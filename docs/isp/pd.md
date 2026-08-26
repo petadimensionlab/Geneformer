@@ -67,14 +67,19 @@
 
 ## 3. 現在までに実施済みの PD 解析
 
-### PD_spleen（`07_pd_spleen_early_isp.py`, **Pretrained**）
+### PD_spleen（`07_pd_spleen_early_isp.py`, **Fine-tuned CellClassifier**）
 - **state**: `disease` PF(α-syn PFF 注入 = 孤発性 PD) → WT
 - **タイムポイント**: 6m / 9m / 12m を個別評価、6m でランキング
 - **細胞プール**: 脾臓免疫 16 種
 - **遺伝子**: 34（α-syn/PD core + リソソーム + 神経炎症/免疫 + 補体）
 - **結果**: 85 レコード（`results/isp/pd_spleen/pd_spleen_early_isp_stats_combined.csv`）
-- **実行時間**: 約 30 分（2026-08-25）
-- **上位（6m Shift）**: S100A8 / S100A9 / FOXP3 / C1QB / CD14 / CXCL10
+
+**2026-08-26 更新: fine-tune 済みで再実行**
+- `06_finetune.py` で PD_spleen を fine-tune → **accuracy 0.9149 / macro F1 0.9079**（28,336 held-out cells）
+- モデル: `runs/260826_geneformer_cellClassifier_PD_spleen_celltype/ksplit1`（417MB 実重み）
+- `07_pd_spleen_early_isp.py` を Pretrained → **CellClassifier** に変更（`_isp_common.resolve_classifier_dir` 使用）
+- 上位（6m Shift, fine-tuned）: **S100A8 / S100A9 / LYZ / ITGAX / C1QA / TREM1 / IL6 / ITGAM / SNCA**
+  - S100A8 +0.0356, S100A9 +0.0221（Pretrained 時 +0.0009/+0.0006 から大幅増強）
 
 ---
 
@@ -84,12 +89,12 @@
 - [x] Wiki に `docs/isp/pd.md` を新設し現状を記録
 - [x] `experiments.csv` に PD の完成度・欠落を注記
 - [x] 他 PD スクリプト（PD_brain / PD_smallint / combos / null）をローカルから取り込み push
+- [x] **PD_spleen の fine-tune + ISP 再実行（2026-08-26）**
 
 ### 優先度 B（データ構築、実行/別 PC 必要）
-- [ ] PD_spleen の **fine-tune 再実行**（`06_finetune.py`）→ 実モデル重み生成
 - [ ] 他 PD 臓器（blood / brain / LN）データの取得・構築
-- [ ] fine-tune 済みモデルで `07_*` を `CellClassifier` で再実行（AD と対称に）
+- [ ] PD_blood / PD_brain / PD_LN を fine-tune 済みモデルで実行（AD と対称に）
 
 ### 注意（解釈）
-- PD は現状 **Pretrained ベース**。fine-tune 完了までは、AD の fine-tuned 結果と直接比較しないこと。
+- PD_spleen は **fine-tuned 済み**（2026-08-26 以降）。Pretrained 結果との比較はモデル差に注意。
 - 脾臓単一臓器・PFF モデルはヒト PD の全容を再現しない。

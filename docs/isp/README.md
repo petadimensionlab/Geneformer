@@ -23,9 +23,9 @@
 | `ad_blood` | AD | 血液（末梢免疫） | `07_ad_blood_early_isp.py` | Fine-tuned CellClassifier | PC-B |
 | `ad_spleen` | AD | 脾臓（免疫） | `07_ad_spleen_early_isp.py` | Fine-tuned CellClassifier | PC-B |
 | `ad_ln` | AD | リンパ節（CD4+ T テスト） | `07_ad_ln_early_isp.py` | Fine-tuned CellClassifier | ローカル |
-| `pd_spleen` | PD | 脾臓（免疫） | `07_pd_spleen_early_isp.py` | **Pretrained** V2-104M | PC-C |
+| `pd_spleen` | PD | 脾臓（免疫） | `07_pd_spleen_early_isp.py` | **Fine-tuned** CellClassifier | PC-C |
 
-> **PD の完成度は AD より低い**（データ=脾臓のみ・fine-tune 済みモデル未完成=Pretrained 実行）。
+> **PD の完成度は AD より低い**（データ=脾臓のみ）。PD_spleen は 2026-08-26 に fine-tune 完了（acc 0.915）+ ISP 再実行済み。
 > 詳細は **[PD の現状・残タスク（pd_spleen）](pd.md)** を参照。
 | `ad_liver` | AD | 肝臓 | `07e_ad_liver_perturbation.py` | Fine-tuned CellClassifier | PC-C |
 | `ad_bm` | AD | 骨髄 | `07f_in_silico_perturbation_AD_BM.py` | Fine-tuned CellClassifier | PC-C |

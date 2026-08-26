@@ -15,7 +15,7 @@ Design (confirmed with user; mirrors 07_ad_smallint_early_isp.py):
   filter_data  = immune cell-poole subset + one timepoint at a time:
                  {"celltype": IMMUNE_POOL, "samples4": ["PFF6m","WT6m"]} etc.
 
-  model/variant: Pretrained Geneformer-V2-104M ("Pretrained" mode),
+  model/variant: Fine-tuned PD_spleen CellClassifier (06_finetune.py),
                  emb_mode="cls" (V2 uses <cls>), model_version="V2"
 
   perturb_type = "delete", combos=0, one gene at a time (gene loop), nproc=1.
@@ -52,6 +52,7 @@ from _isp_common import (
     isp_dir_for,
     load_gene_dicts,
     perturb_one_gene,
+    resolve_classifier_dir,
     resolve_experiment,
     scan_pool_presence_per_key,
     warn_if_multiproc,
@@ -69,15 +70,13 @@ print("device:", get_device(), flush=True)
 ROOT, PREFIX = _resolve_tissue()
 GF_ROOT = Path(os.environ["GENEFORMER_DIR"])
 MODEL_NAME = os.environ.get("GENEFORMER_MODEL", "Geneformer-V2-104M")
-MODEL_DIR = GF_ROOT / MODEL_NAME
 TOKENIZED = ROOT / "tokenized" / f"{PREFIX}.dataset"
 
 # ---------------------------------------------------------------- config
-# Model: Pretrained Geneformer-V2-104M (fine-tuned cell classifier on this
-# tissue is not available — 0-byte weights). Native "Pretrained" mode supports
-# state-embedding extraction and in silico deletion without a label head.
-MODEL_TYPE = "Pretrained"
-NUM_CLASSES = 0
+# Fine-tuned PD_spleen cell classifier (06_finetune.py). Uses the canonical
+# resolution (TRAINED_MODEL_PATH.txt / newest ksplit / pretrained fallback).
+CELLCLASSIFIER_DIR = resolve_classifier_dir(ROOT, GF_ROOT, MODEL_NAME)
+MODEL_TYPE = "CellClassifier"
 
 DISEASE = "PD"
 TISSUE = "spleen"
@@ -160,6 +159,7 @@ from datasets import load_from_disk  # noqa: E402
 
 tokens = load_from_disk(str(TOKENIZED))
 celltypes = sorted(set(tokens["celltype"]))
+NUM_CLASSES = len(celltypes)
 print(f"{len(celltypes)} cell types in dataset", flush=True)
 
 # pre-scan once: gene -> set of (disease, samples4) expressed (in IMMUNE_POOL
@@ -211,7 +211,7 @@ for tp, samples in TIMEPOINTS:
     )
     state_embs_dict = embex.get_state_embs(
         cell_states_to_model,
-        str(MODEL_DIR),
+str(CELLCLASSIFIER_DIR),
         str(TOKENIZED),
         str(ISP_DIR),
         f"isp_state_embs_{tp}",
@@ -227,7 +227,7 @@ for tp, samples in TIMEPOINTS:
             flush=True,
         )
         shift = perturb_one_gene(
-            model_dir=str(MODEL_DIR),
+            model_dir=str(CELLCLASSIFIER_DIR),
             tokenized=str(TOKENIZED),
             out_dir=gene_dir,
             gene_ensg=ensg,
