@@ -71,3 +71,8 @@ analysis/ref
 /result/report_blood/*_early_isp_gene_ranking*.csv
 /result/report_bm/report.html
 /result/report_blood/report.html
+# AD per-tissue report dirs: computed/generated artifacts (not uploaded)
+/result/report_AD_blood/
+/result/report_AD_smallint/
+/result/report_AD_spleen/
+/result/report_pd_spleen/
