@@ -35,6 +35,16 @@ analysis/.DS_Store
 .idea/
 .vscode/
 *.log
+*.log.bak*
+/nohup.out
+
+# --- in-silico-perturbation computed results (NOT uploaded; regenerable) ---
+# Per-gene Shift_to_goal_end CSVs + figures + generated HTML reports are
+# computed/generated artifacts. Keep the build/render scripts + templates +
+# markdown reports tracked; the heavy numeric outputs / rendered HTML are not.
+/result/report/data/
+/result/report/figures/
+/result/report/report_*.html
 
 # --- ref data (MGI homology; auto-downloaded by 03 script, symlink re-created) ---
 ref

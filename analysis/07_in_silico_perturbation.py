@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import json
 import os
+import pickle
 import sys
 from pathlib import Path
 
@@ -174,13 +175,38 @@ print("state_embs keys:", list(state_embs_dict.keys()), flush=True)
 
 # ---------------------------------------------------------------- step 2: perturb
 
-# NOTE: InSilicoPerturber expects Ensembl IDs, not gene symbols.
-# SNCA -> ENSG00000145335. Map a symbol to its Ensembl ID for readability.
-genes_to_perturb_list = ["ENSG00000145335"]  # SNCA
-if len(genes_to_perturb_list)==0:
-    genes_to_perturb = "all"
-else:
+# NOTE: InSilicoPerturber expects Ensembl IDs, not gene symbols, and the gene
+# MUST be present in cells of the start_state (or at all), otherwise
+# perturb_data filters every cell out and raises "No cells in dataset contain
+# genes_to_perturb". A hardcoded gene like SNCA (ENSG00000145335, a brain gene)
+# is absent from the modeled immune/skin cell types. So auto-select genes
+# present in start_state cells; override the count with IS_N_GENES.
+from geneformer import TOKEN_DICTIONARY_FILE
+
+N_GENES = int(os.environ.get("IS_N_GENES", "2"))
+with open(TOKEN_DICTIONARY_FILE, "rb") as f:
+    token_dictionary = pickle.load(f)
+tok2gene = {v: k for k, v in token_dictionary.items() if k.startswith("ENSG")}
+gene_cell_count = {}
+for ex in tokens:
+    if ex["celltype"] != start_state:
+        continue
+    for t in ex["input_ids"]:
+        gene = tok2gene.get(t)
+        if gene is not None:
+            gene_cell_count[gene] = gene_cell_count.get(gene, 0) + 1
+gene_order = sorted(
+    gene_cell_count, key=lambda g: gene_cell_count[g], reverse=True
+)
+genes_to_perturb_list = gene_order[:N_GENES]
+if genes_to_perturb_list:
     genes_to_perturb = genes_to_perturb_list.copy()
+else:
+    genes_to_perturb = "all"
+print(
+    f"genes_to_perturb (present in {start_state} cells): {genes_to_perturb}",
+    flush=True,
+)
 
 # max_ncells for perturb_data. perturb_data materialises the full perturbation
 # dataset in RAM (~n_cells x variants x seq_len); 2000 cells OOM'd on this MPS
