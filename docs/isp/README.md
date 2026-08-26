@@ -23,6 +23,9 @@
 | `ad_blood` | AD | 血液（末梢免疫） | `07_ad_blood_early_isp.py` | Fine-tuned CellClassifier | PC-B |
 | `ad_spleen` | AD | 脾臓（免疫） | `07_ad_spleen_early_isp.py` | Fine-tuned CellClassifier | PC-B |
 | `pd_spleen` | PD | 脾臓（免疫） | `07_pd_spleen_early_isp.py` | **Pretrained** V2-104M | PC-C |
+
+> **PD の完成度は AD より低い**（データ=脾臓のみ・fine-tune 済みモデル未完成=Pretrained 実行）。
+> 詳細は **[PD の現状・残タスク（pd_spleen）](pd.md)** を参照。
 | `ad_liver` | AD | 肝臓 | `07e_ad_liver_perturbation.py` | Fine-tuned CellClassifier | PC-C |
 | `ad_bm` | AD | 骨髄 | `07f_in_silico_perturbation_AD_BM.py` | Fine-tuned CellClassifier | PC-C |
 
@@ -90,6 +93,7 @@ input/<TISSUE>/results/isp/<experiment>/
 - [実行結果のまとめ](results.md)
 - [肝臓（ad_liver）](ad_liver.md)
 - [骨髄（ad_bm）](ad_bm.md)
+- [PD の現状・残タスク（pd_spleen）](pd.md)
 - [再現手順（How to run）](how_to_run.md)
 
 各臓器のスクリプト設定（細胞プール・遺伝子リスト・タイムポイント）と結果トップは各ページに記載しています。
