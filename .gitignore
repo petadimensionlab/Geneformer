@@ -76,3 +76,5 @@ analysis/ref
 /result/report_AD_smallint/
 /result/report_AD_spleen/
 /result/report_pd_spleen/
+# ISP result aggregation dir (computed/generated artifacts)
+/isp_result/
