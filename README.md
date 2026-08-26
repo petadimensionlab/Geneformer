@@ -164,6 +164,11 @@ cd geneformer_hf
 git apply ../patches/geneformer_multibackend.patch   # cwd-independent, works for any user
 cp ../patches/device.py geneformer/device.py         # new file (untracked)
 cd ..
+# If `git apply` fails (e.g. tokenizer.py was already edited by hand), apply
+# the fixes directly by copying the ready-made files instead:
+#   cp patches/tokenizer.py geneformer_hf/geneformer/tokenizer.py
+#   cp patches/device.py    geneformer_hf/geneformer/device.py
+# (tokenizer.py carries the .iloc positional-index and hidden-file-skip fixes)
 
 # 2. Create env
 uv venv .venv --python 3.12
