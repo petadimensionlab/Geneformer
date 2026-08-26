@@ -54,9 +54,10 @@
 | `07c_pd_bm_perturbation.py` | PD_BM | ✅ 追跡済 |
 | `07b_pd_perturbation.py` | PD_LN | ✅ 追跡済 |
 
-> 注: 全リスト **LN（リンパ節）** は、AD / PD いずれも **スクリプト・データ・レポートが存在しない**。
-> PD の `07b_pd_perturbation.py` は命名上「LN」を対象にしているが、実データ（`input/PD_LN` / h5ad）は
-> リポジトリ上に確認できない。
+> 注: 全リスト **LN（リンパ節）** は、AD / PD いずれも **データ・レポートが存在しない**。
+> - **AD_LN**: スクリプト `07_ad_ln_early_isp.py`（CD4+ T 小規模テスト）は **2026-08-26 追跡済**。データ（`input/AD_LN`）は未配置。
+> - **PD_LN**: `07b_pd_perturbation.py` が命名上「LN」を対象にしているが、実データ（`input/PD_LN` / h5ad）は
+>   リポジトリ上に確認できない。
 
 ### 2-4. PD 用の Wiki ページが無い
 - 現在 PD の記述は `docs/isp/README.md`（1 行）と `results.md`（1 節）のみ。

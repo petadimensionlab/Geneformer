@@ -22,12 +22,17 @@
 | `ad_brain` | AD | 脳（ミクログリア） | `07_ad_brain_early_isp.py` | Fine-tuned CellClassifier | PC-A |
 | `ad_blood` | AD | 血液（末梢免疫） | `07_ad_blood_early_isp.py` | Fine-tuned CellClassifier | PC-B |
 | `ad_spleen` | AD | 脾臓（免疫） | `07_ad_spleen_early_isp.py` | Fine-tuned CellClassifier | PC-B |
+| `ad_ln` | AD | リンパ節（CD4+ T テスト） | `07_ad_ln_early_isp.py` | Fine-tuned CellClassifier | ローカル |
 | `pd_spleen` | PD | 脾臓（免疫） | `07_pd_spleen_early_isp.py` | **Pretrained** V2-104M | PC-C |
 
 > **PD の完成度は AD より低い**（データ=脾臓のみ・fine-tune 済みモデル未完成=Pretrained 実行）。
 > 詳細は **[PD の現状・残タスク（pd_spleen）](pd.md)** を参照。
 | `ad_liver` | AD | 肝臓 | `07e_ad_liver_perturbation.py` | Fine-tuned CellClassifier | PC-C |
 | `ad_bm` | AD | 骨髄 | `07f_in_silico_perturbation_AD_BM.py` | Fine-tuned CellClassifier | PC-C |
+
+> **AD_LN（リンパ節）**: `07_ad_ln_early_isp.py` は CD4+ T 細胞の小規模テスト（CD28/STAT3/FOXP3）。
+> `input/AD_LN` の h5ad/tokenized/fine-tune モデルは未配置（スクリプトのみ）のため、実行にはデータの配置が必要。
+> **LN は AD/PD ともスクリプト（AD は本スクリプト）はあるが、データ・レポートは未整備**（PD_LN は `07b_pd_perturbation.py` が命名上の対象、実データなし）。
 
 > 各 PC で作成された script 名・出力先が異なっていたため、本 Wiki と併せて **出力先を統一**し、共通部分を `_isp_common.py` に集約しました（後述）。
 
