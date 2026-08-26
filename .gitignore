@@ -39,12 +39,15 @@ analysis/.DS_Store
 # --- ref data (MGI homology; auto-downloaded by 03 script, symlink re-created) ---
 ref
 analysis/ref
-
 # --- in silico perturbation COMPUTED RESULTS (not for the public repo) ---
 # Raw perturbation datasets / state-embeddings / per-gene raw pickles
 /input/*/results/isp/
+**/results/isp/
 /input/*/tokenized/*_early.dataset/
-# Report artifacts that are computed outputs (figures + result tables), not source
+# Report computed artifacts (figures + result tables), not source
+**/results/report/figures/
+**/results/report/experiments_mapping.csv
+**/results/report/*.html
 /result/report_ad_liver/assets/*.png
 /result/report_ad_liver/assets/isp_gene_ranking.csv
 /result/report_ad_liver/isp_gene_ranking.csv
