@@ -63,3 +63,16 @@ analysis/ref
 /result/report_ad_liver/isp_gene_ranking.csv
 /result/report_ad_liver/*_early_isp_summary.csv
 /result/report_ad_liver/*_early_isp_gene_ranking.csv
+# PD per-tissue report dirs: computed/generated artifacts (not uploaded)
+/result/report/assets/
+/result/report_bm/assets/
+/result/report_blood/assets/
+/result/report/*_early_isp_summary*.csv
+/result/report/*_early_isp_gene_ranking*.csv
+/result/report_bm/*_early_isp_summary*.csv
+/result/report_bm/*_early_isp_gene_ranking*.csv
+/result/report_blood/*_early_isp_summary*.csv
+/result/report_blood/*_early_isp_gene_ranking*.csv
+/result/report/report.html
+/result/report_bm/report.html
+/result/report_blood/report.html

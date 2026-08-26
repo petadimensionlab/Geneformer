@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<style>
+:root{
+  --bg:#f5f7fa; --card:#ffffff; --ink:#1f2d3d; --muted:#5b6b7c;
+  --accent:#2563eb; --accent-soft:#e8f0fe; --border:#e2e8f0;
+  --good:#16a34a; --bad:#dc2626; --warn:#d97706;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"Hiragino Sans","Yu Gothic",Segoe UI,Roboto,sans-serif;
+  background:var(--bg);color:var(--ink);line-height:1.6}
+.wrap{max-width:1100px;margin:0 auto;padding:28px 20px 80px}
+/* header */
+header{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;border-radius:14px;
+  padding:26px 30px;margin-bottom:22px}
+header h1{margin:0 0 6px;font-size:26px;font-weight:800}
+header .sub{opacity:.92;font-size:14px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);
+  padding:3px 12px;border-radius:999px;font-size:12px}
+/* tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;position:sticky;top:0;
+  background:var(--bg);padding:8px 0;z-index:5}
+.tab{border:1px solid var(--border);background:var(--card);color:var(--muted);
+  padding:8px 16px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:600;
+  transition:.15s}
+.tab:hover{border-color:var(--accent);color:var(--accent)}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.panel{display:none}
+.panel.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:20px 24px;margin-bottom:20px}
+h2{font-size:20px;border-left:4px solid var(--accent);padding-left:12px;margin:4px 0 14px}
+h3{font-size:16px;margin:18px 0 8px;color:#1e3a8a}
+h4{font-size:14px;margin:12px 0 6px}
+p{margin:8px 0}
+ul,ol{margin:6px 0 6px 0;padding-left:24px}
+a{color:var(--accent)}
+code{background:#eef2f7;padding:1px 6px;border-radius:5px;font-size:13px;
+  font-family:SFMono-Regular,Menlo,Consolas,monospace}
+pre{background:#0f172a;color:#e2e8f0;padding:14px 16px;border-radius:10px;overflow-x:auto}
+pre code{background:none;color:inherit;padding:0}
+blockquote{border-left:4px solid var(--accent);margin:10px 0;padding:6px 14px;
+  background:var(--accent-soft);border-radius:0 8px 8px 0;color:#334155}
+/* tables */
+table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px}
+th,td{border:1px solid var(--border);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:var(--accent-soft);font-weight:700;color:#1e3a8a}
+tr:nth-child(even) td{background:#f8fafc}
+/* figures */
+.fig{display:flex;flex-wrap:wrap;gap:18px;justify-content:center}
+.fig figure{margin:0;max-width:100%}
+.fig img{width:100%;max-width:520px;border:1px solid var(--border);border-radius:10px}
+figcaption{text-align:center;color:var(--muted);font-size:12px;margin-top:6px}
+/* callout */
+.callout{border-radius:10px;padding:12px 16px;margin:12px 0;font-size:14px}
+.callout.info{background:#eff6ff;border-left:4px solid var(--accent)}
+.callout.warn{background:#fffbeb;border-left:4px solid var(--warn)}
+.callout.good{background:#f0fdf4;border-left:4px solid var(--good)}
+.kbd{font-size:12px}
+.footer{color:var(--muted);font-size:12px;text-align:center;margin-top:30px}
+/* scrollbar nicety */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:6px}
+@media(max-width:640px){header h1{font-size:20px}.wrap{padding:16px 10px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>{{TITLE}}</h1>
+    <div class="sub">{{SUBTITLE}}</div>
+    <div class="meta">
+      {{META_CHIPS}}
+    </div>
+  </header>
+
+  <div class="tabs" id="tabs">
+    {{TAB_BUTTONS}}
+  </div>
+
+  <div id="panels">
+    {{PANELS}}
+  </div>
+
+  <div class="footer">{{FOOTER}}</div>
+</div>
+
+<script>
+(function(){
+  const tabs=[...document.querySelectorAll('.tab')];
+  const panels=[...document.querySelectorAll('.panel')];
+  function show(i){
+    tabs.forEach((t,j)=>t.classList.toggle('active',j===i));
+    panels.forEach((p,j)=>p.classList.toggle('active',j===i));
+  }
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>show(i)));
+  show(0);
+})();
+</script>
+</body>
+</html>
