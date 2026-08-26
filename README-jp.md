@@ -145,6 +145,11 @@ num_proc=nproc)` で perturbation `Dataset` を構築します。3 つの別々�
 
 `07` が使う環境変数: `IS_NPROC`(既定 1)、`IS_MAX_CELLS`(既制 200)。
 
+> **複数臓器の早期疾患スクリーニング** — 複数臓器(小腸/脳/血液/脾臓/肝臓/骨髄)・
+> 複数ホストで実施した AD/PD の in silico perturbation は、
+> **[In Silico Perturbation Wiki](docs/isp/README.md)** にまとめています
+> (出力先の統一規則・共通 `_isp_common.py`・各臓器の設定と結果)。
+
 ## Setup (uv)
 
 ```bash

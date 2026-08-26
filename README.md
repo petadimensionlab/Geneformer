@@ -153,6 +153,12 @@ all of them and prints warnings / RAM estimates at runtime.
 
 Env vars used by `07`: `IS_NPROC` (default 1), `IS_MAX_CELLS` (default 200).
 
+> **Multi-organ early-disease screens** — separate AD/PD in-silico-perturbation
+> runs across several organs (smallint / brain / blood / spleen / liver / bone
+> marrow) and hosts are documented in the
+> **[In Silico Perturbation Wiki](docs/isp/README.md)** (unified output layout,
+> shared `_isp_common.py`, per-organ configs & results).
+
 ## Setup (uv)
 
 ```bash

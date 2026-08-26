@@ -3,7 +3,7 @@
 report (early AD detection in spleen).
 
 Reads:
-  input/AD_spleen/results/isp/early_ad_spleen/ad_spleen_early_isp_stats_combined.csv
+  input/AD_spleen/results/isp/ad_spleen/ad_spleen_early_isp_stats_combined.csv
 Writes:
   result/report/data/ad_spleen_early_isp_results.csv  (all gene x timepoint rows)
   result/report/data/ad_spleen_gene_list.csv          (Gene, Ensembl_ID, Category)
@@ -30,7 +30,7 @@ FIG = REPORT / "figures"
 FIG.mkdir(parents=True, exist_ok=True)
 DATA.mkdir(parents=True, exist_ok=True)
 
-COMBINED = ROOT / "input" / "AD_spleen" / "results" / "isp" / "early_ad_spleen" / "ad_spleen_early_isp_stats_combined.csv"
+COMBINED = ROOT / "input" / "AD_spleen" / "results" / "isp" / "ad_spleen" / "ad_spleen_early_isp_stats_combined.csv"
 
 # Gene category taxonomy — identical panel to AD_blood (55 genes).
 CATS = {

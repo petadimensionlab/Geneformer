@@ -44,8 +44,8 @@ GENES = [
 
 # experiments: (exp_id, suffix, cell_pool, n_cells, run_minutes)
 EXPERIMENTS = [
-    ("E1", "early_ad_brain",     "Microglia + BAM", 1000, "~72"),
-    ("E2", "early_ad_microglia", "Microglia only",  1000, "~80"),
+    ("E1", "ad_brain",     "Microglia + BAM", 1000, "~72"),
+    ("E2", "ad_brain_microglia", "Microglia only",  1000, "~80"),
 ]
 
 
@@ -87,8 +87,8 @@ def main() -> None:
         w.writerow(["Ensembl", "gene_symbol", "category",
                     "Shift_Microglia_BAM", "Shift_Microglia_only"])
         for ensg, gene, cat in GENES:
-            a = shift_by_exp["early_ad_brain"].get(ensg)
-            b = shift_by_exp["early_ad_microglia"].get(ensg)
+            a = shift_by_exp["ad_brain"].get(ensg)
+            b = shift_by_exp["ad_brain_microglia"].get(ensg)
             w.writerow([ensg, gene, cat, fmt(a), fmt(b)])
     print(f"wrote {out_comp}")
 
@@ -105,7 +105,7 @@ def main() -> None:
             "model_version": "V2",
             "model": "fine-tuned CellClassifier (24 celltypes)",
             "n_cells": 200, "n_genes": 23,
-            "output_dir": "results/isp/early_ad_brain (overwritten by exp1)",
+            "output_dir": "results/isp/ad_brain (overwritten by exp1)",
             "results_csv": "not retained (re-run at n=1000)",
             "run_minutes": "~30",
             "notes": "APOE showed +0.0087 but this was sampling noise (not reproduced at n=1000)",
@@ -121,8 +121,8 @@ def main() -> None:
             "model_version": "V2",
             "model": "fine-tuned CellClassifier (24 celltypes)",
             "n_cells": 1000, "n_genes": 23,
-            "output_dir": "results/isp/early_ad_brain",
-            "results_csv": "report/isp_results_early_ad_brain.csv",
+            "output_dir": "results/isp/ad_brain",
+            "results_csv": "report/isp_results_ad_brain.csv",
             "run_minutes": "~72",
             "notes": "APOE +0.0087 at n=200 but vanishes at n=1000 -> sampling noise; all genes ~0",
         },
@@ -137,8 +137,8 @@ def main() -> None:
             "model_version": "V2",
             "model": "fine-tuned CellClassifier (24 celltypes)",
             "n_cells": 1000, "n_genes": 23,
-            "output_dir": "results/isp/early_ad_microglia",
-            "results_csv": "report/isp_results_early_ad_microglia.csv",
+            "output_dir": "results/isp/ad_brain_microglia",
+            "results_csv": "report/isp_results_ad_brain_microglia.csv",
             "run_minutes": "~80",
             "notes": "APOE only positive shift (+0.0007); TREM2 -0.0004; rest ~0",
         },

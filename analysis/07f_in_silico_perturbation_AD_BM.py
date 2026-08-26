@@ -39,67 +39,20 @@ from pathlib import Path
 os.environ["WANDB_DISABLED"] = "true"
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _isp_common import (
+    check_datasets_version,
+    estimate_perturb_ram,
+    isp_dir_for,
+    resolve_experiment,
+    warn_if_multiproc,
+)
 from _resolve_tissue import resolve as _resolve_tissue
 
 from geneformer import EmbExtractor, InSilicoPerturber, InSilicoPerturberStats
 from geneformer.device import get_device
 
 
-def warn_if_multiproc(name: str, nproc: int, max_ncells: int, n_genes: int) -> None:
-    """Emit a visible warning when nproc>1 so users understand the constraints.
-
-    nproc>1 is only safe for `perturb_data` when datasets<5 AND the materialised
-    perturbation dataset stays small. Multi-gene / combos inflate variants, so
-    nproc>1 with large max_ncells is an OOM/hang risk.
-    """
-    if nproc <= 1:
-        return
-    print(
-        f"[WARN] {name}: nproc={nproc} (>1). "
-        "This is only safe with datasets<5 (pin datasets==4.0.0; 5.x hangs "
-        "InSilicoPerturber.perturb_data's dataset.map). "
-        "Workers also add RAM that competes with the MPS forward pass. "
-        f"With max_ncells={max_ncells} and {n_genes} perturbed gene(s), keep "
-        "max_ncells modest (or reduce genes/combos) to avoid OOM. "
-        "nproc=1 is the verified-stable default.",
-        file=sys.stderr,
-        flush=True,
-    )
-
-
-def _check_datasets_version() -> None:
-    """Warn loudly if datasets>=5 (known perturb_data map hang)."""
-    import datasets
-
-    major = int(datasets.__version__.split(".")[0])
-    if major >= 5:
-        print(
-            f"[WARN] datasets=={datasets.__version__} is installed. "
-            "InSilicoPerturber.perturb_data hangs on dataset.map with datasets>=5. "
-            "Pin datasets==4.0.0:  uv pip install datasets==4.0.0",
-            file=sys.stderr,
-            flush=True,
-        )
-
-
-def estimate_perturb_ram(n_cells: int, n_genes: int, combos: int, seq_len: int = 4096) -> float:
-    """Rough RAM (GB) `perturb_data` will need to materialise the perturbation
-    dataset. Each cell -> n_variants perturbation rows; combos=0 and N genes
-    give n_variants ~ N (delete) per cell; combos>0 is the binomial C(N, combos+1)
-    of combinations and explodes fast."""
-    if combos > 0:
-        import math
-
-        n_variants = math.comb(n_genes, combos + 1) if n_genes >= combos + 1 else 1
-    else:
-        n_variants = max(n_genes, 1)
-    total_variants = n_cells * n_variants
-    # input_ids + perturb_index + length + dataset overhead, ~8-12 B/token
-    return (total_variants * seq_len * 10) / 1e9
-
-
 NPROC = int(os.environ.get("IS_NPROC", "1"))  # verified-stable default
-_check_datasets_version()
 
 ROOT, PREFIX = _resolve_tissue()
 GF_ROOT = Path(os.environ["GENEFORMER_DIR"])
@@ -118,8 +71,8 @@ else:
     CELLCLASSIFIER_DIR = str(GF_ROOT / MODEL_NAME)
     print("no fine-tuned classifier found; using pretrained model", flush=True)
 
-ISP_DIR = ROOT / "results" / "isp"
-ISP_DIR.mkdir(parents=True, exist_ok=True)
+# canonical unified output dir: input/AD_BM/results/isp/ad_bm
+ISP_DIR = isp_dir_for(ROOT, resolve_experiment("AD", "bm"))
 
 
 # ---------------------------------------------------------------- states

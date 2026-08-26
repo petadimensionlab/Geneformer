@@ -3,7 +3,7 @@
 report (early AD detection in blood).
 
 Reads:
-  input/AD_blood/results/isp/early_ad_blood/ad_blood_early_isp_stats_combined.csv
+  input/AD_blood/results/isp/ad_blood/ad_blood_early_isp_stats_combined.csv
 Writes:
   result/report/data/ad_blood_early_isp_results.csv  (all gene x timepoint rows)
   result/report/data/ad_blood_gene_list.csv          (Gene, Ensembl_ID, Category)
@@ -28,7 +28,7 @@ FIG = REPORT / "figures"
 FIG.mkdir(parents=True, exist_ok=True)
 DATA.mkdir(parents=True, exist_ok=True)
 
-COMBINED = ROOT / "input" / "AD_blood" / "results" / "isp" / "early_ad_blood" / "ad_blood_early_isp_stats_combined.csv"
+COMBINED = ROOT / "input" / "AD_blood" / "results" / "isp" / "ad_blood" / "ad_blood_early_isp_stats_combined.csv"
 
 CATS = {
     # AD GWAS risk (immune-enriched)

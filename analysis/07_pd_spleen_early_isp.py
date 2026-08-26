@@ -39,60 +39,31 @@ Compute constraints (inherited from 07/07_ad_spleen_early_isp):
 from __future__ import annotations
 
 import os
-import pickle
 import sys
 from pathlib import Path
 
 os.environ["WANDB_DISABLED"] = "true"
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _isp_common import (
+    check_datasets_version,
+    combined_csv_path,
+    estimate_perturb_ram,
+    isp_dir_for,
+    load_gene_dicts,
+    perturb_one_gene,
+    resolve_experiment,
+    scan_pool_presence_per_key,
+    warn_if_multiproc,
+    write_combined,
+)
 from _resolve_tissue import resolve as _resolve_tissue
 
-from geneformer import EmbExtractor, InSilicoPerturber, InSilicoPerturberStats
-from geneformer import TOKEN_DICTIONARY_FILE, ENSEMBL_DICTIONARY_FILE
+from geneformer import EmbExtractor
 from geneformer.device import get_device
 
-
-def warn_if_multiproc(name: str, nproc: int, max_ncells: int, n_genes: int) -> None:
-    if nproc <= 1:
-        return
-    print(
-        f"[WARN] {name}: nproc={nproc} (>1). Only safe with datasets<5 (pin "
-        "datasets==4.0.0; 5.x hangs perturb_data's dataset.map). Workers also add "
-        f"RAM competing with the forward pass. With max_ncells={max_ncells} "
-        f"and {n_genes} perturbed gene(s), keep max_ncells modest to avoid OOM. "
-        "nproc=1 is the verified-stable default.",
-        file=sys.stderr,
-        flush=True,
-    )
-
-
-def _check_datasets_version() -> None:
-    import datasets
-
-    major = int(datasets.__version__.split(".")[0])
-    if major >= 5:
-        print(
-            f"[WARN] datasets=={datasets.__version__} is installed. "
-            "InSilicoPerturber.perturb_data hangs on dataset.map with datasets>=5. "
-            "Pin datasets==4.0.0:  uv pip install datasets==4.0.0",
-            file=sys.stderr,
-            flush=True,
-        )
-
-
-def estimate_perturb_ram(n_cells: int, n_genes: int, combos: int, seq_len: int = 4096) -> float:
-    if combos > 0:
-        import math
-
-        n_variants = math.comb(n_genes, combos + 1) if n_genes >= combos + 1 else 1
-    else:
-        n_variants = max(n_genes, 1)
-    return (n_cells * n_variants * seq_len * 10) / 1e9
-
-
 NPROC = int(os.environ.get("IS_NPROC", "1"))
-_check_datasets_version()
+check_datasets_version()
 print("device:", get_device(), flush=True)
 
 ROOT, PREFIX = _resolve_tissue()
@@ -107,6 +78,12 @@ TOKENIZED = ROOT / "tokenized" / f"{PREFIX}.dataset"
 # state-embedding extraction and in silico deletion without a label head.
 MODEL_TYPE = "Pretrained"
 NUM_CLASSES = 0
+
+DISEASE = "PD"
+TISSUE = "spleen"
+EXPERIMENT = resolve_experiment(DISEASE, TISSUE)
+ISP_DIR = isp_dir_for(ROOT, EXPERIMENT)
+OUT_CSV = combined_csv_path(ROOT, EXPERIMENT)
 
 # Immune cell pool (spleen immune compartment; exclude erythroid/megakaryocytic).
 IMMUNE_POOL = [
@@ -135,9 +112,8 @@ TIMEPOINTS = [
     ("12m", ["PFF12m", "WT12m"]),
 ]
 
-# Hypothesis-driven gene list (shared across timepoints; symbol -> ENSG via
-# ENSEMBL_DICTIONARY_FILE, then restricted to vocab + presence in each time
-# point's pool). PD core + lysosomal/autophagy + neuroinflammation/immune.
+# Hypothesis-driven gene list (symbol -> ENSG via ENSEMBL_DICTIONARY_FILE, then
+# restricted to vocab + presence in each time point's pool).
 HYPOTHESIS_GENES = [
     # alpha-synuclein / PD core
     "SNCA", "LRRK2", "PARK7", "PINK1", "PRKN", "VPS35", "GBA1", "ATP13A2",
@@ -150,9 +126,6 @@ HYPOTHESIS_GENES = [
     # complement / chemokines
     "C1QA", "C1QB", "CXCL10", "CCL2", "CCL3", "CD14",
 ]
-
-ISP_DIR = ROOT / "results" / "isp" / "early_pd"
-ISP_DIR.mkdir(parents=True, exist_ok=True)
 
 MAX_CELLS = int(os.environ.get("IS_MAX_CELLS", "300"))
 EMB_CELLS = int(os.environ.get("IS_EMB_CELLS", "1000"))
@@ -167,24 +140,20 @@ if _smoke_tp:
     print(f"[smoke] limited timepoints to {[tp[0] for tp in TIMEPOINTS]}", flush=True)
 
 # ---------------------------------------------------------------- lookups
-with open(TOKEN_DICTIONARY_FILE, "rb") as f:
-    token_dictionary = pickle.load(f)
-tok2gene = {v: k for k, v in token_dictionary.items() if k.startswith("ENSG")}
-with open(ENSEMBL_DICTIONARY_FILE, "rb") as f:
-    name_id = pickle.load(f)  # gene symbol -> ENSG
+tok2gene, ensg2name, name2ensg = load_gene_dicts()
+_token_vocab = set(tok2gene.values())
 
 gene_name2ensg = {}
 for sym in HYPOTHESIS_GENES:
-    ensg = name_id.get(sym)
+    ensg = name2ensg.get(sym)
     if ensg is None:
         print(f"[skip] {sym}: no ENSG in dictionary", flush=True)
         continue
-    if ensg not in token_dictionary:
+    if ensg not in _token_vocab:
         print(f"[skip] {sym} ({ensg}): not in model vocab", flush=True)
         continue
     gene_name2ensg[sym] = ensg
 print(f"candidate genes (in vocab): {len(gene_name2ensg)}", flush=True)
-ensg2name = {v: k for k, v in name_id.items()}
 
 # ---------------------------------------------------------------- data presence
 from datasets import load_from_disk  # noqa: E402
@@ -194,18 +163,9 @@ celltypes = sorted(set(tokens["celltype"]))
 print(f"{len(celltypes)} cell types in dataset", flush=True)
 
 # pre-scan once: gene -> set of (disease, samples4) expressed (in IMMUNE_POOL
-# cells). Presence is tracked per disease so we can require each gene to be
-# expressed in START_STATE cells (perturb_data filters start-state cells for
-# the perturbed gene; a gene absent from all start cells hangs/errors).
-gene_presence = {}   # ensg -> set((disease, samples4))
-for ex in tokens:
-    if ex["celltype"] not in IMMUNE_POOL:
-        continue
-    key = (ex["disease"], ex["samples4"])
-    for t in ex["input_ids"]:
-        g = tok2gene.get(t)
-        if g is not None:
-            gene_presence.setdefault(g, set()).add(key)
+# cells). Presence tracked per disease so we require each gene expressed in
+# START_STATE cells (a gene absent from all start cells hangs/errors).
+gene_presence = scan_pool_presence_per_key(tokens, tok2gene, IMMUNE_POOL)
 print("per-gene presence pre-scan done", flush=True)
 
 # ---------------------------------------------------------------- run per timepoint
@@ -213,13 +173,11 @@ results = []  # [{timepoint, gene, ensg, shift}]
 
 for tp, samples in TIMEPOINTS:
     print(f"\n===== TIMEPOINT {tp} (start/goal: {samples}) =====", flush=True)
-    # require expression in START-STATE (PF) cells of this timepoint
     start_key = ("PF", samples[0])
     genes_tp = [
         (s, e) for s, e in gene_name2ensg.items()
         if start_key in gene_presence.get(e, set())
     ]
-    # optional smoke subset: IS_MAX_GENES limits how many genes run
     _max_genes = os.environ.get("IS_MAX_GENES")
     if _max_genes:
         genes_tp = genes_tp[: int(_max_genes)]
@@ -240,7 +198,6 @@ for tp, samples in TIMEPOINTS:
         "samples4": samples,
     }
 
-    # step 1: state embs (computed once per timepoint, shared across genes)
     embex = EmbExtractor(
         model_type=MODEL_TYPE,
         num_classes=NUM_CLASSES,
@@ -261,7 +218,6 @@ for tp, samples in TIMEPOINTS:
     )
     print("state_embs keys:", list(state_embs_dict.keys()), flush=True)
 
-    # step 2+3: per-gene perturbation + stats (reuse shared state_embs)
     for gene_name, ensg in genes_tp:
         gene_dir = ISP_DIR / tp / gene_name
         gene_dir.mkdir(parents=True, exist_ok=True)
@@ -270,77 +226,29 @@ for tp, samples in TIMEPOINTS:
             f"\n  [{tp}/{gene_name}] max_ncells={MAX_CELLS}, est. RAM ~{_ram_est:.2f} GB",
             flush=True,
         )
-
-        isp = InSilicoPerturber(
-            perturb_type="delete",
-            perturb_rank_shift=None,
-            genes_to_perturb=[ensg],
-            combos=0,
-            anchor_gene=None,
+        shift = perturb_one_gene(
+            model_dir=str(MODEL_DIR),
+            tokenized=str(TOKENIZED),
+            out_dir=gene_dir,
+            gene_ensg=ensg,
+            cell_states_to_model=cell_states_to_model,
+            filter_data=filter_data_dict,
+            state_embs_dict=state_embs_dict,
             model_type=MODEL_TYPE,
             num_classes=NUM_CLASSES,
-            emb_mode="cls",
-            cell_emb_style="mean_pool",
-            filter_data=filter_data_dict,
-            cell_states_to_model=cell_states_to_model,
-            state_embs_dict=state_embs_dict,
             max_ncells=MAX_CELLS,
-            emb_layer=0,
-            forward_batch_size=64,
-            model_version="V2",
             nproc=NPROC,
         )
-        isp.perturb_data(
-            str(MODEL_DIR),
-            str(TOKENIZED),
-            str(gene_dir),
-            "isp_perturbation",
-        )
-
-        ispstats = InSilicoPerturberStats(
-            mode="goal_state_shift",
-            genes_perturbed=[ensg],
-            combos=0,
-            anchor_gene=None,
-            cell_states_to_model=cell_states_to_model,
-            model_version="V2",
-        )
-        ispstats.get_stats(
-            str(gene_dir),
-            None,
-            str(gene_dir),
-            "isp_stats",
-        )
-
-        csv = gene_dir / "isp_stats.csv"
-        if csv.exists():
-            import pandas as pd  # noqa: PLC0415
-
-            df = pd.read_csv(csv, index_col=0)
-            shift = None
-            if len(df) == 1:
-                shift = df["Shift_to_goal_end"].iloc[0] if "Shift_to_goal_end" in df.columns else None
-            results.append({
-                "Timepoint": tp,
-                "Gene": gene_name,
-                "Ensembl_ID": ensg,
-                "Shift_to_goal_end": shift,
-            })
+        if shift is None:
+            print(f"[WARN] {gene_name}: no Shift_to_goal_end in stats", flush=True)
+        results.append({
+            "Timepoint": tp,
+            "Gene": gene_name,
+            "Ensembl_ID": ensg,
+            "Shift_to_goal_end": shift,
+        })
 
 # ---------------------------------------------------------------- combine results
-import pandas as pd  # noqa: PLC0415
-
-if results:
-    combined = pd.DataFrame(results)
-    early = combined[combined["Timepoint"] == "6m"].set_index("Gene")["Shift_to_goal_end"]
-    combined["Shift_6m"] = combined["Gene"].map(early)
-    combined["Early_rank"] = combined["Gene"].map(early.rank(ascending=False).to_dict())
-    combined = combined.sort_values("Shift_6m", ascending=False)
-    out = ISP_DIR / "pd_spleen_early_isp_stats_combined.csv"
-    combined.to_csv(out, index=False)
-    print(f"\ncombined stats -> {out}")
-    print(combined.to_string(index=False))
-else:
-    print("[WARN] no per-gene stats.csv produced")
+write_combined(results, OUT_CSV, rank_tp="6m")
 
 print("=== IS PERTURBATION (EARLY PD) DONE ===", flush=True)

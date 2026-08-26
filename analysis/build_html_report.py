@@ -4,8 +4,8 @@
 Reads:
   report/ISP_report_AD_brain.md
   report/isp_results_consolidated.csv
-  report/isp_results_early_ad_brain.csv
-  report/isp_results_early_ad_microglia.csv
+  report/isp_results_ad_brain.csv
+  report/isp_results_ad_brain_microglia.csv
   report/experiment_manifest.csv
   report/templates/report_template.html
   report/figures/*.png
@@ -95,10 +95,10 @@ def main() -> None:
     results_html = csv_to_html(REPORT / "isp_results_consolidated.csv",
                                color_key="Shift_Microglia_only")
     results_html += "<h3>E1: Microglia + BAM</h3>"
-    results_html += csv_to_html(REPORT / "isp_results_early_ad_brain.csv",
+    results_html += csv_to_html(REPORT / "isp_results_ad_brain.csv",
                                 color_key="Shift_to_goal_end")
     results_html += "<h3>E2: Microglia only</h3>"
-    results_html += csv_to_html(REPORT / "isp_results_early_ad_microglia.csv",
+    results_html += csv_to_html(REPORT / "isp_results_ad_brain_microglia.csv",
                                 color_key="Shift_to_goal_end")
 
     manifest_html = csv_to_html(REPORT / "experiment_manifest.csv")

@@ -113,7 +113,7 @@ Macrophages, Ly6c.high.classical.Monocytes, Ly6c.low.nonclassical.Monocytes, DCs
 
 ## 6. 結果まとめ（in silico deletion — 早期 PD→WT シフト）
 
-`Shift_to_goal_end` のランキング。全 85 レコードは `input/PD_spleen/results/isp/early_pd/pd_spleen_early_isp_stats_combined.csv`
+`Shift_to_goal_end` のランキング。全 85 レコードは `input/PD_spleen/results/isp/pd_spleen/pd_spleen_early_isp_stats_combined.csv`
 および `result/report/data/pd_spleen_early_isp_results.csv` を参照。
 
 ### 6m（最早期）ランキング上位

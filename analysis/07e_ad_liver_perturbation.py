@@ -45,6 +45,11 @@ from pathlib import Path
 os.environ["WANDB_DISABLED"] = "true"
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _isp_common import (
+    check_datasets_version,
+    isp_dir_for,
+    resolve_experiment,
+)
 from _resolve_tissue import resolve as _resolve_tissue
 
 from geneformer import EmbExtractor, InSilicoPerturber, InSilicoPerturberStats
@@ -114,26 +119,6 @@ LOCAL_CELLCLASSIFIER = (
     ))
     / "runs" / "260823_geneformer_cellClassifier_AD_liver_celltype" / "ksplit1"
 )
-
-
-def _check_datasets_version() -> None:
-    """Warn loudly if datasets>=5 (known perturb_data map hang)."""
-    import datasets
-
-    major = int(datasets.__version__.split(".")[0])
-    if major >= 5:
-        print(
-            f"[WARN] datasets=={datasets.__version__} installed. "
-            "InSilicoPerturber.perturb_data hangs on dataset.map with datasets>=5. "
-            "Pin datasets==4.0.0:  uv pip install datasets==4.0.0",
-            file=sys.stderr, flush=True,
-        )
-
-
-def estimate_perturb_ram(n_cells: int, n_genes: int, seq_len: int = 4096) -> float:
-    """Rough RAM (GB) perturb_data needs (~n_cells * n_variants * seq_len * 10)."""
-    n_variants = max(n_genes, 1)
-    return (n_cells * n_variants * seq_len * 10) / 1e9
 
 
 def build_early_dataset(tokenized_path: Path, early_path: Path, nproc: int) -> Path:
@@ -321,7 +306,7 @@ def run_celltype(
 
 
 def main() -> None:
-    _check_datasets_version()
+    check_datasets_version()
 
     ROOT, PREFIX = _resolve_tissue()
     GF_ROOT = Path(os.environ.get("GENEFORMER_DIR") or (Path(__file__).resolve().parent.parent / "geneformer_hf"))
@@ -343,8 +328,8 @@ def main() -> None:
         CELLCLASSIFIER = str(GF_ROOT / MODEL_NAME)
     print("using cell classifier:", CELLCLASSIFIER, flush=True)
 
-    ISP_DIR = ROOT / "results" / "isp"
-    ISP_DIR.mkdir(parents=True, exist_ok=True)
+    # canonical unified output dir: input/AD_liver/results/isp/ad_liver
+    ISP_DIR = isp_dir_for(ROOT, resolve_experiment("AD", "liver"))
 
     NPROC = int(os.environ.get("IS_NPROC", "1"))
     MAX_CELLS = int(os.environ.get("IS_MAX_CELLS", "200"))

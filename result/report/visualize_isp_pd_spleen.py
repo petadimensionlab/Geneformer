@@ -3,7 +3,7 @@
 
 Reads the early-PD perturbation results produced by
 analysis/07_pd_spleen_early_isp.py
-  input/PD_spleen/results/isp/early_pd/pd_spleen_early_isp_stats_combined.csv
+  input/PD_spleen/results/isp/pd_spleen/pd_spleen_early_isp_stats_combined.csv
 (one row per gene per timepoint, columns: Timepoint, Gene, Ensembl_ID,
  Shift_to_goal_end, Shift_6m, Early_rank)
 
@@ -36,7 +36,7 @@ REPORT.mkdir(parents=True, exist_ok=True)
 DATA.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(parents=True, exist_ok=True)
 
-SRC = Path(__file__).resolve().parent.parent.parent / "input" / "PD_spleen" / "results" / "isp" / "early_pd"
+SRC = Path(__file__).resolve().parent.parent.parent / "input" / "PD_spleen" / "results" / "isp" / "pd_spleen"
 SRC_CSV = SRC / "pd_spleen_early_isp_stats_combined.csv"
 
 # hypothesis gene categories (mirror analysis/07_pd_spleen_early_isp.py)

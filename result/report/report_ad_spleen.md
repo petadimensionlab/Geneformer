@@ -20,7 +20,7 @@
 
 実験対応（`result/report/experiments.csv`）: `isp_early_ad_spleen`
 対応する解析ソース: `analysis/07_ad_spleen_early_isp.py`（血中 `07_ad_spleen_early_isp` の脾臓移植版）
-結果 CSV: `input/AD_spleen/results/isp/early_ad_spleen/ad_spleen_early_isp_stats_combined.csv`
+結果 CSV: `input/AD_spleen/results/isp/ad_spleen/ad_spleen_early_isp_stats_combined.csv`
 
 ---
 
