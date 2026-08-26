@@ -10,7 +10,7 @@
 
 | 項目 | AD | **PD** |
 |---|---|---|
-| データ臓器 | blood, brain, smallint, spleen, liver, BM（+LN 未取得） | **spleen のみ** |
+| データ臓器 | blood, brain, smallint, spleen, liver, BM（+LN 未取得） | **spleen のみ**（script は LN/BM/blood/brain/smallint 分あり） |
 | h5ad / tokenized | 6 臓器完備 | PD_spleen のみ（h5ad 667MB, 83,783 細胞, 24 細胞型, 36 個体） |
 | fine-tune 済み分類器 | 実重みあり | **未完成（0 バイト）** |
 | ISP 結果 | 複数臓器 | PD_spleen 1 件のみ（85 レコード） |
@@ -34,17 +34,29 @@
   → AD 系の `CellClassifier`（fine-tuned）と非対称で、組織特異シグナルの抽出精度に差がある。
 - `results/tables/adpd_*`（fine-tuned 評価）も **空**（0 バイト）＝ fine-tune 結果が存在しない。
 
-### 2-3. 参照されているが存在しない PD スクリプト
-他スクリプトのコメントに登場するが、**実体がこのリポジトリに無い**：
+### 2-3. PD スクリプトの存在状況（2026-08-26 更新）
 
-| 参照 | 想定される対象 | 存在 |
+> **更新**: `analysis/07b_in_silico_perturbation_PD.py`（PD_brain）と
+> `analysis/07e_in_silico_perturbation_PD_smallint.py`（PD_smallint）が
+> ローカルに実在することを確認し、リポジトリへ**取り込み commit** 済み。
+> あわせて `analysis/07c_in_silico_perturbation_PD_combos.py`（PD_brain の
+> SNCA×partner 削除）と `analysis/07d_in_silico_perturbation_PD_null.py`
+> （PD_brain の null 有意性）も取り込み済み。
+
+| スクリプト | 対象 | 存在（更新後） |
 |---|---|---|
-| `07b_in_silico_perturbation_PD.py` | PD_brain | ❌ 欠落 |
-| `07d_pd_blood_perturbation.py` | PD_blood | ❌ 欠落 |
-| `07_pd_brain_early_isp.py` | PD_brain | ❌ 欠落 |
-| `07_pd_blood_early_isp.py` | PD_blood | ❌ 欠落 |
+| `07b_in_silico_perturbation_PD.py` | PD_brain | ✅ 取込済 |
+| `07e_in_silico_perturbation_PD_smallint.py` | PD_smallint | ✅ 取込済 |
+| `07c_in_silico_perturbation_PD_combos.py` | PD_brain（combos） | ✅ 取込済 |
+| `07d_in_silico_perturbation_PD_null.py` | PD_brain（null） | ✅ 取込済 |
+| `07_pd_spleen_early_isp.py` | PD_spleen | ✅ 追跡済 |
+| `07d_pd_blood_perturbation.py` | PD_blood | ✅ 追跡済 |
+| `07c_pd_bm_perturbation.py` | PD_BM | ✅ 追跡済 |
+| `07b_pd_perturbation.py` | PD_LN | ✅ 追跡済 |
 
-→ 別 PC で作成されたが未取り込みの可能性が高い。
+> 注: 全リスト **LN（リンパ節）** は、AD / PD いずれも **スクリプト・データ・レポートが存在しない**。
+> PD の `07b_pd_perturbation.py` は命名上「LN」を対象にしているが、実データ（`input/PD_LN` / h5ad）は
+> リポジトリ上に確認できない。
 
 ### 2-4. PD 用の Wiki ページが無い
 - 現在 PD の記述は `docs/isp/README.md`（1 行）と `results.md`（1 節）のみ。
@@ -70,7 +82,7 @@
 ### 優先度 A（書類整理、データ不要）
 - [x] Wiki に `docs/isp/pd.md` を新設し現状を記録
 - [x] `experiments.csv` に PD の完成度・欠落を注記
-- [ ] 他 PD スクリプト（PD_brain / PD_blood）が別 PC にあれば取り込み
+- [x] 他 PD スクリプト（PD_brain / PD_smallint / combos / null）をローカルから取り込み push
 
 ### 優先度 B（データ構築、実行/別 PC 必要）
 - [ ] PD_spleen の **fine-tune 再実行**（`06_finetune.py`）→ 実モデル重み生成
