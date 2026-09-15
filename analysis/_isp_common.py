@@ -209,6 +209,46 @@ def scan_pool_presence_per_key(tokens, tok2gene, celltype_pool) -> dict:
     return gene_presence
 
 
+# ---------------------------------------------------------------- dtype switch
+
+
+def apply_dtype_override() -> str:
+    """Apply ``GF_DTYPE`` to every model geneformer loads.
+
+    ``perturber_utils.load_model`` has no dtype argument: it always materialises
+    an fp32 model (or a quantized one). ``GF_DTYPE=bf16`` wraps it so the loaded
+    model is cast to bfloat16 after the device move, matching the embedding/ISP
+    numbers in docs/quantization/EXPERIMENT.md (bf16: ~5x fp32 throughput,
+    embedding cosine 0.99995-0.99998).
+
+    ``GF_DTYPE`` unset / ``none`` / ``fp32`` leaves the original code path
+    untouched. Quantization is deliberately not handled here because a quantized
+    model cannot be cast with ``.to(dtype)``.
+
+    Called automatically at import time, so every ISP / embedding script that
+    imports ``_isp_common`` honours the variable.
+    """
+    name = os.environ.get("GF_DTYPE", "").strip().lower()
+    if name in ("", "none", "fp32", "float32"):
+        return "float32"
+    if name not in ("bf16", "bfloat16"):
+        raise SystemExit(f"unsupported GF_DTYPE={name!r} (use bf16 or none)")
+    import torch
+    from geneformer import perturber_utils as pu
+
+    original = pu.load_model
+
+    def load_model_bf16(*args, **kwargs):
+        return original(*args, **kwargs).to(torch.bfloat16)
+
+    pu.load_model = load_model_bf16
+    return "bfloat16"
+
+
+DTYPE_OVERRIDE = apply_dtype_override()
+print(f"[config] GF_DTYPE -> {DTYPE_OVERRIDE} (geneformer load_model)", flush=True)
+
+
 # ---------------------------------------------------------------- single-gene runner
 
 

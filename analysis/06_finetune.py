@@ -57,6 +57,19 @@ for d in (RUN_DIR, TABLE_DIR, FIG_DIR):
     d.mkdir(parents=True, exist_ok=True)
 
 RUN_PREFIX = f"{PREFIX}_celltype"
+# The trained checkpoint path is runs/<date>_geneformer_cellClassifier_<RUN_PREFIX>/ksplit1
+# and the model name is not part of it, so pointing this script at a different
+# model (e.g. Geneformer-V2-316M) would silently reuse the existing classifier
+# ("reusing existing checkpoint") instead of training a new one. Tag non-default
+# models — or anything set via FINETUNE_RUN_SUFFIX — so each model gets its own
+# directory. The default model keeps the original name for backwards compatibility.
+RUN_SUFFIX = os.environ.get(
+    "FINETUNE_RUN_SUFFIX",
+    "" if MODEL_NAME == "Geneformer-V2-104M" else MODEL_NAME,
+)
+if RUN_SUFFIX:
+    RUN_PREFIX = f"{PREFIX}_celltype_{RUN_SUFFIX}"
+    print(f"[config] run prefix -> {RUN_PREFIX}", flush=True)
 from geneformer.device import get_device
 
 device = get_device()
@@ -83,6 +96,12 @@ print(f"samples  train {len(TRAIN)}  eval {len(EVAL)}  test {len(TEST)}", flush=
 CLASSES = sorted(set(tokens["celltype"]))
 print(f"{len(CLASSES)} classes", flush=True)
 
+# bf16 autocast for training (FINETUNE_BF16=1). Measured ~4x faster per step
+# than fp32 for V2-316M with no accuracy loss (docs/quantization/EXPERIMENT.md).
+USE_BF16 = os.environ.get("FINETUNE_BF16", "").strip().lower() in ("1", "true", "yes")
+if USE_BF16:
+    print("[config] bf16 autocast enabled", flush=True)
+
 # ------------------------------------------------------------------ classifier
 from geneformer import Classifier
 
@@ -106,6 +125,7 @@ classifier = Classifier(
         "save_strategy": "epoch",
         "logging_steps": 100,
         "report_to": "none",
+        **({"bf16": True} if USE_BF16 else {}),
     },
     max_ncells=None,
     freeze_layers=6,
