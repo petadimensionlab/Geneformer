@@ -25,6 +25,10 @@ __pycache__/
 # geneformer_hf/ is a git-lfs clone of ctheodoris/Geneformer (7 GB incl. weights).
 # Not committed. Fetch with ./download.sh. Our device patches live in patches/.
 /geneformer_hf/
+
+# --- quantized / pre-converted model artifacts (regenerable, ~1.5 GB) ---
+# Built by analysis/11_prequant_vs_loadtime.py. See docs/quantization/.
+/quantized/
 analysis/.omc/
 analysis/.omo/
 analysis/.DS_Store
