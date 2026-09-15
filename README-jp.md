@@ -266,6 +266,232 @@ Note: `Geneformer-V2-316M` weights are **not** in the clone by default
 (`model.safetensors` is a 135-byte LFS pointer) — fetch them with
 `./download.sh --model V2-316M` before any 316M work.
 
+## bf16 で in silico perturbation を回す
+
+<a id="isp-bf16-ja"></a>
+**日本語** · [English](#isp-bf16-en)
+
+`GF_DTYPE=bf16` を付けると、geneformer が読み込むモデル（`perturber_utils.load_model`）が
+すべて bfloat16 で動きます。AD_spleen の実測では **所要時間 2.28倍・GPUエネルギー 3.82倍削減・
+平均電力 40%減・最高温度 7°C 低下**で、**上位20遺伝子は fp32 と 20/20 一致**しました
+（[docs/quantization/REPORT-316M-ISP-jp.md](docs/quantization/REPORT-316M-ISP-jp.md)）。
+
+### 1. 初回だけ必要な準備
+
+numpy は bfloat16 を扱えないため、パッチを当てないと埋め込みの書き出しで
+`TypeError: Got unsupported ScalarType BFloat16` で落ちます。
+
+```bash
+cp patches/bf16/emb_extractor.py    geneformer_hf/geneformer/emb_extractor.py
+cp patches/bf16/perturber_utils.py  geneformer_hf/geneformer/perturber_utils.py
+```
+
+### 2. 実行
+
+通常の ISP との違いは `GF_DTYPE=bf16` の1行だけです。
+
+```bash
+GENEFORMER_DIR=geneformer_hf \
+GENEFORMER_MODEL=Geneformer-V2-316M \
+ADPD_TISSUE=AD_spleen \
+GF_DTYPE=bf16 \
+ISP_EXPERIMENT=ad_spleen_316m_bf16 \
+IS_CELLCLASSIFIER_DIR=$PWD/input/AD_spleen/runs/260915_geneformer_cellClassifier_AD_spleen_celltype_Geneformer-V2-316M/ksplit1 \
+.venv/bin/python analysis/07_ad_spleen_early_isp.py
+```
+
+組織によってスクリプト名だけが変わります（環境変数の並びは同じ）:
+AD_blood → `07_ad_blood_early_isp.py`、AD_brain → `07_ad_brain_early_isp.py`、
+AD_smallint → `07_ad_smallint_early_isp.py`、PD_spleen → `07_pd_spleen_early_isp.py`、
+AD_liver → `07e_ad_liver_perturbation.py`。
+
+### 3. 必ず設定する4つ
+
+| 変数 | 意味 | 注意 |
+|---|---|---|
+| `GF_DTYPE=bf16` | モデルを bfloat16 で動かす | 未設定 / `none` なら従来の fp32 |
+| `ISP_EXPERIMENT=<名前>` | 出力フォルダ名 | **付けないと既存の fp32 結果を上書きします** |
+| `IS_CELLCLASSIFIER_DIR=<path>` | 使う微調整済み分類器 | **明示推奨** — 自動解決は最新の `runs/**/ksplit*` を選ぶため、104M 実行でも 316M 分類器を掴みます |
+| `GENEFORMER_MODEL` | 事前学習モデル | `Geneformer-V2-316M` または `Geneformer-V2-104M` |
+
+分類器のパスは `ls -d input/<TISSUE>/runs/*/ksplit1` で確認できます。
+
+### 4. 先にスモークテスト（1〜2分）
+
+```bash
+IS_MAX_GENES=1 IS_TIMEPOINTS=3m IS_MAX_CELLS=50 \
+GENEFORMER_DIR=geneformer_hf GENEFORMER_MODEL=Geneformer-V2-316M ADPD_TISSUE=AD_spleen \
+GF_DTYPE=bf16 ISP_EXPERIMENT=smoke_bf16 \
+IS_CELLCLASSIFIER_DIR=$PWD/input/AD_spleen/runs/<run>/ksplit1 \
+.venv/bin/python analysis/07_ad_spleen_early_isp.py
+```
+
+### 5. bf16 が効いているか確認する
+
+ログに次の行が必ず出ます。出ていなければ fp32 のままで、結果は変わりません。
+
+```
+[config] GF_DTYPE -> bfloat16 (geneformer load_model)
+```
+
+### 6. `GF_DTYPE` が効くスクリプト
+
+対応（`_isp_common` を読み込んでいるもの）: `07_ad_spleen_early_isp.py`、
+`07_ad_blood_early_isp.py`、`07_ad_brain_early_isp.py`、
+`07_ad_smallint_early_isp.py`、`07_ad_ln_early_isp.py`、
+`07_pd_spleen_early_isp.py`、`07e_ad_liver_perturbation.py`、
+`07f_in_silico_perturbation_AD_BM.py`。
+
+古い系統（`07_in_silico_perturbation.py`、`07b_*`、`07c_*`、`07d_*`、
+`07e_in_silico_perturbation_PD_smallint.py`）は無視します。
+bf16 を使いたい場合は、import の後に2行足してください。
+
+```python
+from _isp_common import apply_dtype_override
+apply_dtype_override()
+```
+
+### 7. 結果の検証と計測
+
+```bash
+# fp32 の結果との順位一致（スピアマン・top-20・符号一致）
+.venv/bin/python analysis/14_compare_isp.py \
+  --a input/AD_spleen/results/isp/<fp32の実験名> \
+  --b input/AD_spleen/results/isp/<bf16の実験名> \
+  --label fp32_vs_bf16 --out docs/quantization/g5
+
+# 所要時間・電力・エネルギー・温度＋ログからの遺伝子別所要時間
+.venv/bin/python analysis/13_profile.py --label isp-bf16 \
+  --out docs/quantization/profiles -- .venv/bin/python analysis/07_ad_spleen_early_isp.py
+.venv/bin/python analysis/15_isp_timing.py docs/quantization/profiles/isp-bf16.log
+```
+
+### 8. つまずきやすい点
+
+1. **量子化（`model_type="Pretrained-Quantized"`）と `GF_DTYPE=bf16` は併用できません。**
+   量子化済みモデルには `.to(dtype)` を呼べないためです。bf16 を使うなら量子化は不要です。
+2. **`IS_MAX_CELLS` を上げるほど bf16 の利得が伸びます。** 遺伝子×時点の1ユニットあたり
+   約12秒は dtype と無関係な固定費（データセット構築・stats・pickle）で、そこは速くなりません。
+3. **`datasets==4.0.0` と `IS_NPROC=1` を維持**してください（上の ISP セクション参照）。
+4. 期待値: 所要時間 **2.28倍**、エネルギー **3.82倍**。上位20遺伝子は fp32 と同一で、
+   差は `|Shift| ≈ 2e-04` 以下（ノイズフロア内）に収まります。
+
+<a id="isp-bf16-en"></a>
+### Running in silico perturbation in bf16
+
+**English** · [日本語](#isp-bf16-ja)
+
+`GF_DTYPE=bf16` makes every model geneformer loads (via
+`perturber_utils.load_model`) run in bfloat16. Measured on AD_spleen with a
+fine-tuned V2-316M classifier: **2.28x faster end to end, 3.82x less GPU
+energy, 40% lower average power, 7 °C cooler**, with an identical top-20 gene
+ranking (20/20) — see
+[docs/quantization/REPORT-316M-ISP.md](docs/quantization/REPORT-316M-ISP.md).
+
+#### 1. One-time prerequisite
+
+numpy has no bfloat16 dtype, so the embedding export dies with
+`TypeError: Got unsupported ScalarType BFloat16` unless the patch is applied:
+
+```bash
+cp patches/bf16/emb_extractor.py    geneformer_hf/geneformer/emb_extractor.py
+cp patches/bf16/perturber_utils.py  geneformer_hf/geneformer/perturber_utils.py
+```
+
+#### 2. Run it
+
+`GF_DTYPE=bf16` is the only difference from a normal ISP run:
+
+```bash
+GENEFORMER_DIR=geneformer_hf \
+GENEFORMER_MODEL=Geneformer-V2-316M \
+ADPD_TISSUE=AD_spleen \
+GF_DTYPE=bf16 \
+ISP_EXPERIMENT=ad_spleen_316m_bf16 \
+IS_CELLCLASSIFIER_DIR=$PWD/input/AD_spleen/runs/260915_geneformer_cellClassifier_AD_spleen_celltype_Geneformer-V2-316M/ksplit1 \
+.venv/bin/python analysis/07_ad_spleen_early_isp.py
+```
+
+Tissue script names differ, the environment prefix does not: AD_blood →
+`07_ad_blood_early_isp.py`, AD_brain → `07_ad_brain_early_isp.py`,
+AD_smallint → `07_ad_smallint_early_isp.py`, PD_spleen →
+`07_pd_spleen_early_isp.py`, AD_liver → `07e_ad_liver_perturbation.py`.
+
+#### 3. Always set these four
+
+| variable | meaning | note |
+|---|---|---|
+| `GF_DTYPE=bf16` | run the model in bfloat16 | unset/`none` = the old fp32 path |
+| `ISP_EXPERIMENT=<label>` | output directory name | **without it the run overwrites the existing fp32 results** |
+| `IS_CELLCLASSIFIER_DIR=<path>` | which fine-tuned classifier to load | **set it explicitly** — auto-resolution picks the *newest* `runs/**/ksplit*`, which is now the 316M classifier even for a 104M run |
+| `GENEFORMER_MODEL` | which pretrained model | `Geneformer-V2-316M` or `Geneformer-V2-104M` |
+
+Find the classifier path with `ls -d input/<TISSUE>/runs/*/ksplit1`.
+
+#### 4. Smoke test first (1-2 minutes)
+
+```bash
+IS_MAX_GENES=1 IS_TIMEPOINTS=3m IS_MAX_CELLS=50 \
+GENEFORMER_DIR=geneformer_hf GENEFORMER_MODEL=Geneformer-V2-316M ADPD_TISSUE=AD_spleen \
+GF_DTYPE=bf16 ISP_EXPERIMENT=smoke_bf16 \
+IS_CELLCLASSIFIER_DIR=$PWD/input/AD_spleen/runs/<run>/ksplit1 \
+.venv/bin/python analysis/07_ad_spleen_early_isp.py
+```
+
+#### 5. Confirming bf16 is actually active
+
+The log must contain this line — without it you are still running fp32 and the
+result will look unchanged:
+
+```
+[config] GF_DTYPE -> bfloat16 (geneformer load_model)
+```
+
+#### 6. Which scripts honour `GF_DTYPE`
+
+Supported (they import `_isp_common`): `07_ad_spleen_early_isp.py`,
+`07_ad_blood_early_isp.py`, `07_ad_brain_early_isp.py`,
+`07_ad_smallint_early_isp.py`, `07_ad_ln_early_isp.py`,
+`07_pd_spleen_early_isp.py`, `07e_ad_liver_perturbation.py`,
+`07f_in_silico_perturbation_AD_BM.py`.
+
+The older scripts (`07_in_silico_perturbation.py`, `07b_*`, `07c_*`, `07d_*`,
+`07e_in_silico_perturbation_PD_smallint.py`) ignore it. To enable bf16 there,
+add two lines after their imports:
+
+```python
+from _isp_common import apply_dtype_override
+apply_dtype_override()
+```
+
+#### 7. Verify the result, and profile it
+
+```bash
+# rank agreement against the fp32 run (Spearman, top-20, sign agreement)
+.venv/bin/python analysis/14_compare_isp.py \
+  --a input/AD_spleen/results/isp/<fp32-experiment> \
+  --b input/AD_spleen/results/isp/<bf16-experiment> \
+  --label fp32_vs_bf16 --out docs/quantization/g5
+
+# wall time / power / energy / temperature, plus per-gene timing from the log
+.venv/bin/python analysis/13_profile.py --label isp-bf16 \
+  --out docs/quantization/profiles -- .venv/bin/python analysis/07_ad_spleen_early_isp.py
+.venv/bin/python analysis/15_isp_timing.py docs/quantization/profiles/isp-bf16.log
+```
+
+#### 8. Pitfalls
+
+1. **Do not combine `GF_DTYPE=bf16` with a quantized model**
+   (`model_type="Pretrained-Quantized"`): a quantized model cannot be cast with
+   `.to(dtype)`. bf16 makes quantization unnecessary anyway.
+2. **Raising `IS_MAX_CELLS` increases bf16's advantage.** About 12 s of every
+   gene × timepoint unit is dtype-independent setup (perturbation dataset, stats
+   pass, pickles) and does not speed up, so forward-bound runs gain more.
+3. **Keep `datasets==4.0.0` and `IS_NPROC=1`** (see the ISP section above).
+4. Measured expectation: **2.28x** wall time, **3.82x** energy, and bf16 leaves
+   the top-20 gene ranking identical to fp32 (differences stay below
+   `|Shift| ≈ 2e-04`, i.e. inside the noise floor).
+
 ## Setup (uv)
 
 ```bash
