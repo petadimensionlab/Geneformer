@@ -1,7 +1,6 @@
 # Geneformer V2-104M — マルチバックエンド (MPS / CUDA / ROCm) 対応
 
-> **🇬🇧 English version → [`README.md`](README.md)**
-> **日本語 (Japanese) | [English](README.md)**
+> [English](README.md) · **日本語**
 
 このワークスペースでは、[`ctheodoris/Geneformer`](https://huggingface.co/ctheodoris/Geneformer) の
 **Geneformer V2-104M** を、3 つのアクセラレータで動作させます:
@@ -152,18 +151,22 @@ num_proc=nproc)` で perturbation `Dataset` を構築します。3 つの別々�
 
 ## モデルの量子化 — 実測した知見
 
+<a id="quant-ja"></a>
+**日本語** · [English](#quant-en)
+
 **推論・埋め込み抽出・in silico perturbation・微調整**のそれぞれで、
-bf16 / bitsandbytes の int8 / 4bit(nf4) がどう違うか。
-さらに、モデルサイズ（V2-104M と V2-316M）や規模を変えるとどうなるかを実測しました。
+bf16 / bitsandbytes の int8 / 4bit(nf4) がどう違うか。さらに、モデルサイズ
+（V2-104M と V2-316M）と規模（batch 8〜256、系列長 512〜4,096）を
+変えるとどうなるかを実測しました。
 
 測定値・方法・落とし穴の一覧は
-**[docs/quantization/EXPERIMENT-jp.md](docs/quantization/EXPERIMENT-jp.md)**
-（英語版: [EXPERIMENT.md](docs/quantization/EXPERIMENT.md)）にまとめています。
+**[EXPERIMENT-jp.md](docs/quantization/EXPERIMENT-jp.md)**（日本語）/
+**[EXPERIMENT.md](docs/quantization/EXPERIMENT.md)**（English）にまとめています。
 
 GB10（統合メモリ 119.63 GiB）での主な結果:
 
 - **bf16 は fp32 の約5倍速く、精度の低下は測定できないレベル**です
-  （埋め込み cos 0.99998）。すべての段階でこれが最適解です。
+  （埋め込み cos 0.99998）。埋め込み抽出・ISP・微調整のすべてで最適解です。
 - **int8 は安全ですが bf16 より遅い**です（fp32 の1.6〜1.7倍）。
   bf16 が使えない環境と、配布物のサイズ削減のときだけ使います。
 - **4bit(nf4) は遺伝子の順位を壊します**（top-100 の一致が 87/100）。
@@ -172,12 +175,22 @@ GB10（統合メモリ 119.63 GiB）での主な結果:
   batch 8〜256 で速さはほぼ一定、batch 256 での bf16 と nf4 のメモリ差は 0.12 GiB。
   int4/int8 が有利なのは配布物のサイズと CPU 推論だけです。
 - **微調整では量子化は逆効果**です。bf16 + 勾配チェックポイントが
-  QLoRA よりメモリも速度も有利です（104M・batch 8・系列長 4096 で
-  1.82 GiB 対 9.83 GiB）。
-- **事前に量子化して保存しても推論は何も変わりません**（埋め込みはビット単位で一致）が、
-  **ロードは 2〜6倍遅くなります**。配布サイズのためだけに使い、
-  さらに「bf16 で事前保存したチェックポイントは `torch_dtype` を明示しないと
-  fp32 として読み込まれる」点に注意してください。
+  QLoRA よりメモリも速度も有利です（104M・batch 8・系列長 4096 で 1.82 GiB 対 9.83 GiB）。
+- **事前量子化は配布用には有効ですが、速度のためには損**です —
+  推論は同一（埋め込みはビット単位で一致）なのにロードは 2〜6倍遅くなります。
+  bf16 で事前保存したチェックポイントは `torch_dtype` を明示しないと
+  fp32 として読み込まれます。
+
+| ドキュメント | 言語 | 内容 |
+|---|---|---|
+| [EXPERIMENT-jp.md](docs/quantization/EXPERIMENT-jp.md) | JP | **最初にこれ。** 実験のまとめ（全測定値・方法・段階ごとの指針・落とし穴一覧） |
+| [EXPERIMENT.md](docs/quantization/EXPERIMENT.md) | EN | 同上（英語版） |
+| [PLAN.md](docs/quantization/PLAN.md) | JP | 量子化の全体計画（目的の整理・フェーズ・合格基準） |
+| [STAGES.md](docs/quantization/STAGES.md) | JP | 段階ごとの影響（tokenization / embedding / ISP / fine-tuning） |
+| [PREQUANT-VS-LOADTIME.md](docs/quantization/PREQUANT-VS-LOADTIME.md) | JP | 事前量子化とロード時量子化の比較 |
+| [PLAN-316M-128GB.md](docs/quantization/PLAN-316M-128GB.md) | JP | V2-316M を 128GB のマシンで動かす計画 |
+| [REPORT-104M-48GB.md](docs/quantization/REPORT-104M-48GB.md) | JP | 104M は 48GB の GPU で動くかの検証レポート |
+| [docs/quantization/README.md](docs/quantization/README.md) | EN/JP | 上記の索引（バイリンガル） |
 
 測定スクリプトは `analysis/10*_quant*.py`、`analysis/10e_train_mem_probe.py`、
 `analysis/11*_prequant*.py` / `analysis/11b_load_time_bench.py` にあります。
@@ -186,6 +199,58 @@ JSON の生データと事前量子化アーティファクトは `quantized/` �
 なお **`Geneformer-V2-316M` の重みは既定では入っていません**
 （`model.safetensors` は 135 バイトの LFS ポインタ）。316M を使う前に
 `./download.sh --model V2-316M` で実体を取得してください。
+
+<a id="quant-en"></a>
+### Model quantization — measured findings
+
+**English** · [日本語](#quant-ja)
+
+How do bf16, bitsandbytes int8 and 4-bit nf4 compare for **inference, embedding
+extraction, in silico perturbation and fine-tuning** on this hardware, and how
+does that change with model size (V2-104M vs V2-316M) and with scale (batch 8 →
+256, 512 → 4,096 tokens)?
+
+Full experiment log with every measured number, the methodology and a pitfall
+catalogue: **[EXPERIMENT.md](docs/quantization/EXPERIMENT.md)** (English) /
+**[EXPERIMENT-jp.md](docs/quantization/EXPERIMENT-jp.md)** (日本語).
+
+Headline results on the GB10 host (119.63 GiB unified memory):
+
+- **bf16 is ~5x faster than fp32 with no measurable accuracy loss** (embedding
+  cosine 0.99998). It is the right answer for every stage.
+- **int8 is safe but slower than bf16** (1.6-1.7x vs fp32). Its only real uses
+  are environments without bf16 and artefact size.
+- **4-bit nf4 degrades gene *rankings*** (top-100 overlap 87/100) and must not
+  be used where a perturbation run's output is a gene ranking.
+- **Scaling cells/genes does not unlock an int4/int8 advantage** — throughput is
+  flat from batch 8 to 256 and bf16 vs nf4 memory differs by 0.12 GiB at batch
+  256. int4/int8 only win on artefact size and CPU inference.
+- **For fine-tuning, quantization is counterproductive**: bf16 + gradient
+  checkpointing beats QLoRA on both memory and speed (1.82 GiB vs 9.83 GiB for
+  104M at batch 8 / seq len 4096).
+- **Pre-quantizing weights to ship them is fine, to speed things up it is a
+  loss**: identical inference (bit-identical embeddings) but 2-6x slower
+  loading. A pre-saved bf16 checkpoint reloads as fp32 unless `torch_dtype` is
+  passed explicitly.
+
+| Document | Language | Content |
+|---|---|---|
+| [EXPERIMENT.md](docs/quantization/EXPERIMENT.md) | EN | **Start here.** Experiment log: all numbers, methodology, stage-by-stage guidance, pitfalls |
+| [EXPERIMENT-jp.md](docs/quantization/EXPERIMENT-jp.md) | JP | 実験のまとめ（同上の日本語版） |
+| [PLAN.md](docs/quantization/PLAN.md) | JP | Quantization plan: goals, phases, acceptance gates |
+| [STAGES.md](docs/quantization/STAGES.md) | JP | Impact per pipeline stage (tokenization / embedding / ISP / fine-tuning) |
+| [PREQUANT-VS-LOADTIME.md](docs/quantization/PREQUANT-VS-LOADTIME.md) | JP | Pre-quantized weights vs quantizing at load time |
+| [PLAN-316M-128GB.md](docs/quantization/PLAN-316M-128GB.md) | JP | Running V2-316M on a 128 GB machine |
+| [REPORT-104M-48GB.md](docs/quantization/REPORT-104M-48GB.md) | JP | Does V2-104M fit on a 48 GB GPU |
+| [docs/quantization/README.md](docs/quantization/README.md) | EN/JP | Bilingual index of the above |
+
+Measurement scripts live in `analysis/10*_quant*.py`, `analysis/10e_train_mem_probe.py`
+and `analysis/11*_prequant*.py` / `11b_load_time_bench.py`. Raw JSON results and
+the pre-quantized artefacts go to `quantized/` (gitignored).
+
+Note: `Geneformer-V2-316M` weights are **not** in the clone by default
+(`model.safetensors` is a 135-byte LFS pointer) — fetch them with
+`./download.sh --model V2-316M` before any 316M work.
 
 ## Setup (uv)
 

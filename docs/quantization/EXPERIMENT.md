@@ -1,6 +1,6 @@
 # Geneformer quantization — consolidated experiment log
 
-**Japanese version: [EXPERIMENT-jp.md](EXPERIMENT-jp.md)**
+**English** · [日本語](EXPERIMENT-jp.md)
 
 All numbers below were measured on the machine used for this work. Nothing here
 is estimated unless explicitly labelled as such.

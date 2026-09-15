@@ -1,6 +1,6 @@
 # Geneformer 量子化 — 実験のまとめ
 
-**English version: [EXPERIMENT.md](EXPERIMENT.md)**
+[English](EXPERIMENT.md) · **日本語**
 
 ここに書いた数値は、すべて実際に測定したものです。推定に頼っている箇所は
 その旨を明記しています。

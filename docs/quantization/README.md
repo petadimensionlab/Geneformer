@@ -1,6 +1,7 @@
 # Geneformer quantization docs / Geneformer 量子化ドキュメント
 
-**English** · [日本語](#日本語)
+<a id="en"></a>
+**English** · [日本語](#ja)
 
 Everything in this folder is based on measurements on the NVIDIA GB10 host
 (119.63 GiB unified memory, aarch64, torch 2.13.0+cu130, bitsandbytes 0.50.1).
@@ -49,6 +50,9 @@ see each docstring.
 ---
 
 ## 日本語
+
+<a id="ja"></a>
+**日本語** · [English](#en)
 
 このフォルダの内容はすべて NVIDIA GB10（統合メモリ 119.63 GiB、aarch64、
 torch 2.13.0+cu130、bitsandbytes 0.50.1）での実測に基づいています。
