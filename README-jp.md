@@ -152,7 +152,7 @@ num_proc=nproc)` で perturbation `Dataset` を構築します。3 つの別々�
 ## モデルの量子化 — 実測した知見
 
 <a id="quant-ja"></a>
-**日本語** · [English](#quant-en)
+**日本語** · [English](README.md#quant-en)
 
 **推論・埋め込み抽出・in silico perturbation・微調整**のそれぞれで、
 bf16 / bitsandbytes の int8 / 4bit(nf4) がどう違うか。さらに、モデルサイズ
@@ -207,69 +207,10 @@ JSON の生データと事前量子化アーティファクトは `quantized/` �
 （`model.safetensors` は 135 バイトの LFS ポインタ）。316M を使う前に
 `./download.sh --model V2-316M` で実体を取得してください。
 
-<a id="quant-en"></a>
-### Model quantization — measured findings
-
-**English** · [日本語](#quant-ja)
-
-How do bf16, bitsandbytes int8 and 4-bit nf4 compare for **inference, embedding
-extraction, in silico perturbation and fine-tuning** on this hardware, and how
-does that change with model size (V2-104M vs V2-316M) and with scale (batch 8 →
-256, 512 → 4,096 tokens)?
-
-Full experiment log with every measured number, the methodology and a pitfall
-catalogue: **[EXPERIMENT.md](docs/quantization/EXPERIMENT.md)** (English) /
-**[EXPERIMENT-jp.md](docs/quantization/EXPERIMENT-jp.md)** (日本語).
-
-Headline results on the GB10 host (119.63 GiB unified memory):
-
-- **bf16 is ~5x faster than fp32 with no measurable accuracy loss** (embedding
-  cosine 0.99998). It is the right answer for every stage.
-- **int8 is safe but slower than bf16** (1.6-1.7x vs fp32). Its only real uses
-  are environments without bf16 and artefact size.
-- **4-bit nf4 degrades gene *rankings*** (top-100 overlap 87/100) and must not
-  be used where a perturbation run's output is a gene ranking.
-- **Scaling cells/genes does not unlock an int4/int8 advantage** — throughput is
-  flat from batch 8 to 256 and bf16 vs nf4 memory differs by 0.12 GiB at batch
-  256. int4/int8 only win on artefact size and CPU inference.
-- **For fine-tuning, quantization is counterproductive**: bf16 + gradient
-  checkpointing beats QLoRA on both memory and speed (1.82 GiB vs 9.83 GiB for
-  104M at batch 8 / seq len 4096).
-- **Pre-quantizing weights to ship them is fine, to speed things up it is a
-  loss**: identical inference (bit-identical embeddings) but 2-6x slower
-  loading. A pre-saved bf16 checkpoint reloads as fp32 unless `torch_dtype` is
-  passed explicitly.
-- **Measured end to end on AD_spleen with a fine-tuned V2-316M classifier**:
-  bf16 cuts ISP wall time **2.28x** and GPU energy **3.82x** on a matched pair
-  (24 genes × 3 timepoints: 40 min 57 s / 47.7 Wh fp32 vs **17 min 58 s /
-  12.5 Wh** bf16) with **top-20 gene overlap 20/20**; the full 55-gene canary
-  runs in 46 min. The fine-tune itself takes 2 h and 137 Wh. Details:
-  [REPORT-316M-ISP.md](docs/quantization/REPORT-316M-ISP.md).
-
-| Document | Language | Content |
-|---|---|---|
-| [EXPERIMENT.md](docs/quantization/EXPERIMENT.md) | EN | **Start here.** Experiment log: all numbers, methodology, stage-by-stage guidance, pitfalls |
-| [REPORT-316M-ISP.md](docs/quantization/REPORT-316M-ISP.md) | EN | V2-316M classifier + AD_spleen ISP canary, fp32-vs-bf16 ranking gate, time/energy/load comparison |
-| [EXPERIMENT-jp.md](docs/quantization/EXPERIMENT-jp.md) | JP | 実験のまとめ（同上の日本語版） |
-| [PLAN.md](docs/quantization/PLAN.md) | JP | Quantization plan: goals, phases, acceptance gates |
-| [STAGES.md](docs/quantization/STAGES.md) | JP | Impact per pipeline stage (tokenization / embedding / ISP / fine-tuning) |
-| [PREQUANT-VS-LOADTIME.md](docs/quantization/PREQUANT-VS-LOADTIME.md) | JP | Pre-quantized weights vs quantizing at load time |
-| [PLAN-316M-128GB.md](docs/quantization/PLAN-316M-128GB.md) | JP | Running V2-316M on a 128 GB machine |
-| [REPORT-104M-48GB.md](docs/quantization/REPORT-104M-48GB.md) | JP | Does V2-104M fit on a 48 GB GPU |
-| [docs/quantization/README.md](docs/quantization/README.md) | EN/JP | Bilingual index of the above |
-
-Measurement scripts live in `analysis/10*_quant*.py`, `analysis/10e_train_mem_probe.py`
-and `analysis/11*_prequant*.py` / `11b_load_time_bench.py`. Raw JSON results and
-the pre-quantized artefacts go to `quantized/` (gitignored).
-
-Note: `Geneformer-V2-316M` weights are **not** in the clone by default
-(`model.safetensors` is a 135-byte LFS pointer) — fetch them with
-`./download.sh --model V2-316M` before any 316M work.
-
 ## bf16 で in silico perturbation を回す
 
 <a id="isp-bf16-ja"></a>
-**日本語** · [English](#isp-bf16-en)
+**日本語** · [English](README.md#isp-bf16-en)
 
 `GF_DTYPE=bf16` を付けると、geneformer が読み込むモデル（`perturber_utils.load_model`）が
 すべて bfloat16 で動きます。AD_spleen の実測では **所要時間 2.28倍・GPUエネルギー 3.82倍削減・
@@ -375,122 +316,6 @@ apply_dtype_override()
 3. **`datasets==4.0.0` と `IS_NPROC=1` を維持**してください（上の ISP セクション参照）。
 4. 期待値: 所要時間 **2.28倍**、エネルギー **3.82倍**。上位20遺伝子は fp32 と同一で、
    差は `|Shift| ≈ 2e-04` 以下（ノイズフロア内）に収まります。
-
-<a id="isp-bf16-en"></a>
-### Running in silico perturbation in bf16
-
-**English** · [日本語](#isp-bf16-ja)
-
-`GF_DTYPE=bf16` makes every model geneformer loads (via
-`perturber_utils.load_model`) run in bfloat16. Measured on AD_spleen with a
-fine-tuned V2-316M classifier: **2.28x faster end to end, 3.82x less GPU
-energy, 40% lower average power, 7 °C cooler**, with an identical top-20 gene
-ranking (20/20) — see
-[docs/quantization/REPORT-316M-ISP.md](docs/quantization/REPORT-316M-ISP.md).
-
-#### 1. One-time prerequisite
-
-numpy has no bfloat16 dtype, so the embedding export dies with
-`TypeError: Got unsupported ScalarType BFloat16` unless the patch is applied:
-
-```bash
-cp patches/bf16/emb_extractor.py    geneformer_hf/geneformer/emb_extractor.py
-cp patches/bf16/perturber_utils.py  geneformer_hf/geneformer/perturber_utils.py
-```
-
-#### 2. Run it
-
-`GF_DTYPE=bf16` is the only difference from a normal ISP run:
-
-```bash
-GENEFORMER_DIR=geneformer_hf \
-GENEFORMER_MODEL=Geneformer-V2-316M \
-ADPD_TISSUE=AD_spleen \
-GF_DTYPE=bf16 \
-ISP_EXPERIMENT=ad_spleen_316m_bf16 \
-IS_CELLCLASSIFIER_DIR=$PWD/input/AD_spleen/runs/260915_geneformer_cellClassifier_AD_spleen_celltype_Geneformer-V2-316M/ksplit1 \
-.venv/bin/python analysis/07_ad_spleen_early_isp.py
-```
-
-Tissue script names differ, the environment prefix does not: AD_blood →
-`07_ad_blood_early_isp.py`, AD_brain → `07_ad_brain_early_isp.py`,
-AD_smallint → `07_ad_smallint_early_isp.py`, PD_spleen →
-`07_pd_spleen_early_isp.py`, AD_liver → `07e_ad_liver_perturbation.py`.
-
-#### 3. Always set these four
-
-| variable | meaning | note |
-|---|---|---|
-| `GF_DTYPE=bf16` | run the model in bfloat16 | unset/`none` = the old fp32 path |
-| `ISP_EXPERIMENT=<label>` | output directory name | **without it the run overwrites the existing fp32 results** |
-| `IS_CELLCLASSIFIER_DIR=<path>` | which fine-tuned classifier to load | **set it explicitly** — auto-resolution picks the *newest* `runs/**/ksplit*`, which is now the 316M classifier even for a 104M run |
-| `GENEFORMER_MODEL` | which pretrained model | `Geneformer-V2-316M` or `Geneformer-V2-104M` |
-
-Find the classifier path with `ls -d input/<TISSUE>/runs/*/ksplit1`.
-
-#### 4. Smoke test first (1-2 minutes)
-
-```bash
-IS_MAX_GENES=1 IS_TIMEPOINTS=3m IS_MAX_CELLS=50 \
-GENEFORMER_DIR=geneformer_hf GENEFORMER_MODEL=Geneformer-V2-316M ADPD_TISSUE=AD_spleen \
-GF_DTYPE=bf16 ISP_EXPERIMENT=smoke_bf16 \
-IS_CELLCLASSIFIER_DIR=$PWD/input/AD_spleen/runs/<run>/ksplit1 \
-.venv/bin/python analysis/07_ad_spleen_early_isp.py
-```
-
-#### 5. Confirming bf16 is actually active
-
-The log must contain this line — without it you are still running fp32 and the
-result will look unchanged:
-
-```
-[config] GF_DTYPE -> bfloat16 (geneformer load_model)
-```
-
-#### 6. Which scripts honour `GF_DTYPE`
-
-Supported (they import `_isp_common`): `07_ad_spleen_early_isp.py`,
-`07_ad_blood_early_isp.py`, `07_ad_brain_early_isp.py`,
-`07_ad_smallint_early_isp.py`, `07_ad_ln_early_isp.py`,
-`07_pd_spleen_early_isp.py`, `07e_ad_liver_perturbation.py`,
-`07f_in_silico_perturbation_AD_BM.py`.
-
-The older scripts (`07_in_silico_perturbation.py`, `07b_*`, `07c_*`, `07d_*`,
-`07e_in_silico_perturbation_PD_smallint.py`) ignore it. To enable bf16 there,
-add two lines after their imports:
-
-```python
-from _isp_common import apply_dtype_override
-apply_dtype_override()
-```
-
-#### 7. Verify the result, and profile it
-
-```bash
-# rank agreement against the fp32 run (Spearman, top-20, sign agreement)
-.venv/bin/python analysis/14_compare_isp.py \
-  --a input/AD_spleen/results/isp/<fp32-experiment> \
-  --b input/AD_spleen/results/isp/<bf16-experiment> \
-  --label fp32_vs_bf16 --out docs/quantization/g5
-
-# wall time / power / energy / temperature, plus per-gene timing from the log
-.venv/bin/python analysis/13_profile.py --label isp-bf16 \
-  --out docs/quantization/profiles -- .venv/bin/python analysis/07_ad_spleen_early_isp.py
-.venv/bin/python analysis/15_isp_timing.py docs/quantization/profiles/isp-bf16.log
-```
-
-#### 8. Pitfalls
-
-1. **Do not combine `GF_DTYPE=bf16` with a quantized model**
-   (`model_type="Pretrained-Quantized"`): a quantized model cannot be cast with
-   `.to(dtype)`. bf16 makes quantization unnecessary anyway.
-2. **Raising `IS_MAX_CELLS` increases bf16's advantage.** About 12 s of every
-   gene × timepoint unit is dtype-independent setup (perturbation dataset, stats
-   pass, pickles) and does not speed up, so forward-bound runs gain more.
-3. **Keep `datasets==4.0.0` and `IS_NPROC=1`** (see the ISP section above).
-4. Measured expectation: **2.28x** wall time, **3.82x** energy, and bf16 leaves
-   the top-20 gene ranking identical to fp32 (differences stay below
-   `|Shift| ≈ 2e-04`, i.e. inside the noise floor).
 
 ## Setup (uv)
 
