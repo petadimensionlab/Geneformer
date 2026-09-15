@@ -159,6 +159,43 @@ Env vars used by `07`: `IS_NPROC` (default 1), `IS_MAX_CELLS` (default 200).
 > **[In Silico Perturbation Wiki](docs/isp/README.md)** (unified output layout,
 > shared `_isp_common.py`, per-organ configs & results).
 
+## Model quantization — measured findings
+
+How do bf16, bitsandbytes int8 and 4-bit nf4 compare for **inference, embedding
+extraction, in silico perturbation and fine-tuning** on this hardware, and how
+does that change with model size (V2-104M vs V2-316M) and scale?
+
+Full experiment log with all measured numbers, methodology and a pitfall
+catalogue: **[docs/quantization/EXPERIMENT.md](docs/quantization/EXPERIMENT.md)**
+(Japanese: [EXPERIMENT-jp.md](docs/quantization/EXPERIMENT-jp.md)).
+
+Headline results on the GB10 host (119.63 GiB unified memory):
+
+- **bf16 is ~5x faster than fp32 with no measurable accuracy loss** (embedding
+  cosine 0.99998). It is the right answer for every stage.
+- **int8 is safe but slower than bf16** (1.6-1.7x vs fp32). Its only real uses
+  are environments without bf16 and artefact size.
+- **4-bit nf4 degrades gene *rankings*** (top-100 overlap 87/100) and must not
+  be used where a perturbation run's output is a gene ranking.
+- **Scaling cells/genes does not unlock an int4/int8 advantage** — throughput is
+  flat from batch 8 to 256 and bf16 vs nf4 memory differs by 0.12 GiB at batch
+  256. int4/int8 only win on artefact size and CPU inference.
+- **For fine-tuning, quantization is counterproductive**: bf16 + gradient
+  checkpointing beats QLoRA on both memory and speed (1.82 GiB vs 9.83 GiB for
+  104M at batch 8 / seq len 4096).
+- **Pre-quantizing weights and saving them changes nothing at inference**
+  (bit-identical embeddings) but makes loading 2-6x slower. Pre-quantize for
+  distribution size only — and note that a pre-saved bf16 checkpoint reloads as
+  fp32 unless `torch_dtype` is passed explicitly.
+
+Measurement scripts live in `analysis/10*_quant*.py`, `analysis/10e_train_mem_probe.py`
+and `analysis/11*_prequant*.py` / `11b_load_time_bench.py`. Raw JSON results and
+the pre-quantized artefacts go to `quantized/` (gitignored).
+
+Note: `Geneformer-V2-316M` weights are **not** in the clone by default
+(`model.safetensors` is a 135-byte LFS pointer) — fetch them with
+`./download.sh --model V2-316M` before any 316M work.
+
 ## Setup (uv)
 
 ```bash

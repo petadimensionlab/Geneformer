@@ -150,6 +150,43 @@ num_proc=nproc)` で perturbation `Dataset` を構築します。3 つの別々�
 > **[In Silico Perturbation Wiki](docs/isp/README.md)** にまとめています
 > (出力先の統一規則・共通 `_isp_common.py`・各臓器の設定と結果)。
 
+## モデルの量子化 — 実測した知見
+
+**推論・埋め込み抽出・in silico perturbation・微調整**のそれぞれで、
+bf16 / bitsandbytes の int8 / 4bit(nf4) がどう違うか。
+さらに、モデルサイズ（V2-104M と V2-316M）や規模を変えるとどうなるかを実測しました。
+
+測定値・方法・落とし穴の一覧は
+**[docs/quantization/EXPERIMENT-jp.md](docs/quantization/EXPERIMENT-jp.md)**
+（英語版: [EXPERIMENT.md](docs/quantization/EXPERIMENT.md)）にまとめています。
+
+GB10（統合メモリ 119.63 GiB）での主な結果:
+
+- **bf16 は fp32 の約5倍速く、精度の低下は測定できないレベル**です
+  （埋め込み cos 0.99998）。すべての段階でこれが最適解です。
+- **int8 は安全ですが bf16 より遅い**です（fp32 の1.6〜1.7倍）。
+  bf16 が使えない環境と、配布物のサイズ削減のときだけ使います。
+- **4bit(nf4) は遺伝子の順位を壊します**（top-100 の一致が 87/100）。
+  perturbation の成果物が遺伝子ランキングである以上、使えません。
+- **セル数や遺伝子数を増やしても int4/int8 の利点は出ません** —
+  batch 8〜256 で速さはほぼ一定、batch 256 での bf16 と nf4 のメモリ差は 0.12 GiB。
+  int4/int8 が有利なのは配布物のサイズと CPU 推論だけです。
+- **微調整では量子化は逆効果**です。bf16 + 勾配チェックポイントが
+  QLoRA よりメモリも速度も有利です（104M・batch 8・系列長 4096 で
+  1.82 GiB 対 9.83 GiB）。
+- **事前に量子化して保存しても推論は何も変わりません**（埋め込みはビット単位で一致）が、
+  **ロードは 2〜6倍遅くなります**。配布サイズのためだけに使い、
+  さらに「bf16 で事前保存したチェックポイントは `torch_dtype` を明示しないと
+  fp32 として読み込まれる」点に注意してください。
+
+測定スクリプトは `analysis/10*_quant*.py`、`analysis/10e_train_mem_probe.py`、
+`analysis/11*_prequant*.py` / `analysis/11b_load_time_bench.py` にあります。
+JSON の生データと事前量子化アーティファクトは `quantized/` に出力されます（git 管理外）。
+
+なお **`Geneformer-V2-316M` の重みは既定では入っていません**
+（`model.safetensors` は 135 バイトの LFS ポインタ）。316M を使う前に
+`./download.sh --model V2-316M` で実体を取得してください。
+
 ## Setup (uv)
 
 ```bash
