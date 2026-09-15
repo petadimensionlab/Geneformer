@@ -1,0 +1,86 @@
+{
+  "316m-bf16-full": {
+    "log": "docs/quantization/profiles/isp-316m-bf16-full.log",
+    "units": 165,
+    "startup_s": 54.3,
+    "first_unit_s": 14.9,
+    "per_unit_s": {
+      "mean": 16.53,
+      "median": 16.55,
+      "min": 7.3,
+      "max": 71.9,
+      "stdev": 6.47
+    },
+    "span_first_to_last_s": 2711.0,
+    "per_timepoint_unit_s": {
+      "3m": {
+        "n": 55,
+        "mean": 14.46
+      },
+      "4p5m": {
+        "n": 55,
+        "mean": 17.45
+      },
+      "6m": {
+        "n": 54,
+        "mean": 17.7
+      }
+    }
+  },
+  "316m-bf16-sub24": {
+    "log": "docs/quantization/profiles/isp-316m-bf16-sub24.log",
+    "units": 72,
+    "startup_s": 54.1,
+    "first_unit_s": 11.3,
+    "per_unit_s": {
+      "mean": 14.23,
+      "median": 13.4,
+      "min": 7.3,
+      "max": 63.9,
+      "stdev": 8.55
+    },
+    "span_first_to_last_s": 1010.4,
+    "per_timepoint_unit_s": {
+      "3m": {
+        "n": 24,
+        "mean": 13.16
+      },
+      "4p5m": {
+        "n": 24,
+        "mean": 16.45
+      },
+      "6m": {
+        "n": 23,
+        "mean": 13.04
+      }
+    }
+  },
+  "316m-fp32-sub24": {
+    "log": "docs/quantization/profiles/isp-316m-fp32-sub24.log",
+    "units": 72,
+    "startup_s": 131.1,
+    "first_unit_s": 25.2,
+    "per_unit_s": {
+      "mean": 32.31,
+      "median": 30.7,
+      "min": 7.3,
+      "max": 186.9,
+      "stdev": 25.61
+    },
+    "span_first_to_last_s": 2293.9,
+    "per_timepoint_unit_s": {
+      "3m": {
+        "n": 24,
+        "mean": 28.85
+      },
+      "4p5m": {
+        "n": 24,
+        "mean": 36.95
+      },
+      "6m": {
+        "n": 23,
+        "mean": 31.07
+      }
+    }
+  }
+}

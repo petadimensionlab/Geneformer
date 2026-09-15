@@ -11,11 +11,16 @@ Start with the consolidated experiment log, then drill into the topic documents.
 |---|---|---|
 | [EXPERIMENT.md](EXPERIMENT.md) | EN | **Start here.** Consolidated experiment log: all measured numbers, methodology, stage-by-stage guidance, pitfall catalogue |
 | [EXPERIMENT-jp.md](EXPERIMENT-jp.md) | JP | 同上（日本語版） |
+| [REPORT-316M-ISP.md](REPORT-316M-ISP.md) | EN | V2-316M classifier + AD_spleen ISP canary, G5 (fp32 vs bf16) and the time/energy/load comparison |
+| [REPORT-316M-ISP-jp.md](REPORT-316M-ISP-jp.md) | JP | 同上（日本語版） |
 | [PLAN.md](PLAN.md) | JP | Overall quantization plan: goals, phases, acceptance gates |
 | [STAGES.md](STAGES.md) | JP | Impact per pipeline stage (tokenization / embedding / ISP / fine-tuning) |
 | [PREQUANT-VS-LOADTIME.md](PREQUANT-VS-LOADTIME.md) | JP | Pre-quantized weights vs quantizing at load time |
 | [PLAN-316M-128GB.md](PLAN-316M-128GB.md) | JP | Plan for running V2-316M on a 128 GB machine |
 | [REPORT-104M-48GB.md](REPORT-104M-48GB.md) | JP | Report: does V2-104M fit on a 48 GB GPU |
+
+Raw evidence: `profiles/` (per-run wall time / power / energy / temperature
+profiles, with timestamped logs) and `g5/` (rank-agreement JSON).
 
 ## The short version
 
@@ -43,6 +48,9 @@ Start with the consolidated experiment log, then drill into the topic documents.
 | `10e_train_mem_probe.py` | one fine-tuning step (including the QLoRA comparison) |
 | `11_prequant_vs_loadtime.py` | pre-quantized vs load-time quantization (speed, accuracy, load time) |
 | `11b_load_time_bench.py` | repeated load-time benchmark per variant |
+| `13_profile.py` | run any command under a load/energy profile (wall time, GPU %, power, Wh, CPU, RSS, °C) |
+| `14_compare_isp.py` | rank agreement between two ISP runs (Spearman, top-N, sign agreement) |
+| `15_isp_timing.py` | per-gene × timepoint cost from a profiled ISP log |
 
 All scripts take the model, tissue and batch sizes from environment variables —
 see each docstring.
@@ -62,11 +70,16 @@ torch 2.13.0+cu130、bitsandbytes 0.50.1）での実測に基づいています�
 |---|---|---|
 | [EXPERIMENT-jp.md](EXPERIMENT-jp.md) | JP | **最初にこれ。** 実験のまとめ（全測定値・方法・段階ごとの指針・落とし穴一覧） |
 | [EXPERIMENT.md](EXPERIMENT.md) | EN | 同上（英語版） |
+| [REPORT-316M-ISP-jp.md](REPORT-316M-ISP-jp.md) | JP | V2-316M 分類器 + AD_spleen の ISP canary、G5（fp32 対 bf16）、時間・エネルギー・負荷の比較 |
+| [REPORT-316M-ISP.md](REPORT-316M-ISP.md) | EN | 同上（英語版） |
 | [PLAN.md](PLAN.md) | JP | 量子化の全体計画（目的の整理・フェーズ・合格基準） |
 | [STAGES.md](STAGES.md) | JP | 段階ごとの影響（tokenization / embedding / ISP / fine-tuning） |
 | [PREQUANT-VS-LOADTIME.md](PREQUANT-VS-LOADTIME.md) | JP | 事前量子化とロード時量子化の比較 |
 | [PLAN-316M-128GB.md](PLAN-316M-128GB.md) | JP | V2-316M を 128GB のマシンで動かす計画 |
 | [REPORT-104M-48GB.md](REPORT-104M-48GB.md) | JP | 104M は 48GB の GPU で動くかの検証レポート |
+
+生の証跡: `profiles/`（実行ごとの所要時間・電力・エネルギー・温度のプロファイルと時刻付きログ）、
+`g5/`（順位一致の JSON）。
 
 ### 結論だけ知りたい場合
 
@@ -94,5 +107,8 @@ torch 2.13.0+cu130、bitsandbytes 0.50.1）での実測に基づいています�
 | `10e_train_mem_probe.py` | 微調整 1 ステップ（QLoRA の比較つき） |
 | `11_prequant_vs_loadtime.py` | 事前量子化とロード時量子化の比較（速度・精度・ロード時間） |
 | `11b_load_time_bench.py` | 方式ごとのロード時間の反復測定 |
+| `13_profile.py` | 任意のコマンドを負荷計測つきで実行（所要時間・GPU%・電力・Wh・CPU・RSS・温度） |
+| `14_compare_isp.py` | ISP 2実行の順位一致（スピアマン・top-N・符号一致） |
+| `15_isp_timing.py` | 計測ログから遺伝子×時点の単価を抽出 |
 
 モデル・組織・batch はすべて環境変数で切り替えられます。各スクリプトの docstring を参照してください。

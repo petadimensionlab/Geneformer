@@ -1,0 +1,30 @@
+{
+  "label": "316m-ad-spleen-eval",
+  "command": [
+    ".venv/bin/python",
+    "analysis/06_finetune.py"
+  ],
+  "wall_s": 143.03,
+  "wall_hms": "00:02:23",
+  "exit_code": -15,
+  "samples": 70,
+  "gpu_util_pct": {
+    "mean": 87.77,
+    "max": 96.0,
+    "active_fraction": 0.914
+  },
+  "gpu_power_w": {
+    "mean": 83.78,
+    "max": 94.31,
+    "min": 5.21
+  },
+  "gpu_energy_wh": 3.328,
+  "gpu_temp_c_max": 86.0,
+  "cpu_pct": {
+    "mean": 5.98,
+    "max": 12.47
+  },
+  "rss_peak_gib": 2.322,
+  "mem_available_min_gib": 91.17,
+  "interval_s": 2.0
+}

@@ -288,8 +288,46 @@ Summary: **pre-quantize for distribution size, never for speed.**
    and keep the tissues used for final evaluation out of calibration.
 10. **Keep `datasets==4.0.0`** (`>=5` makes `perturb_data`'s `dataset.map` hang),
     and keep `transformers==4.46.3` (5.x breaks `SpecialTokensMixin`).
+11. **bf16 dies in the embedding export** — numpy has no bfloat16 dtype, so
+    `embs.cpu().numpy()` raises `TypeError: Got unsupported ScalarType
+    BFloat16` (`emb_extractor.py:256`, 283, 702, `perturber_utils.py:824`).
+    Insert `.float()` before `.cpu().numpy()` (no-op on fp32). Patch + note:
+    `patches/bf16/`.
+12. **A single tied cell aborts the evaluation of a fine-tune.**
+    `evaluation_utils.vote()` returns the string `"tie"` on an exact float tie,
+    which then reaches sklearn as a mixed-type label array:
+    `ValueError: Mix of label input types (string and number)`. The checkpoint
+    is already written, but the run exits non-zero and no metrics/report are
+    produced. Break ties numerically (lowest class index). Patch + note:
+    `patches/eval_tie/`.
 
-## 12. Reproduce
+## 12. End-to-end ISP measurement (V2-316M, AD_spleen) — see REPORT-316M-ISP.md
+
+Once the 316M path was wired up, the whole pipeline was measured on AD_spleen
+rather than on synthetic batches:
+
+| | bf16 | fp32 | change |
+|---|---|---|---|
+| ISP canary, 55 genes × 3 timepoints × 200 cells | **46 min 25 s, 34.9 Wh** | ≈1 h 46 m, ≈133 Wh *(extrapolated)* | 2.28x faster, 3.82x less energy |
+| ISP matched pair, 24 genes × 3 tp × 100 cells | **17 min 58 s, 12.5 Wh, 41.6 W** | 40 min 57 s, 47.7 Wh, 69.9 W | −56% time, −74% energy, −40% power |
+| fine-tune, 1 epoch (3,057 steps) | **1 h 59 m 46 s, 137.5 Wh** | ≈8 h *(extrapolated)* | ~4.0x |
+
+Rank agreement of the matched pair (same 316M checkpoint, only dtype differs):
+**Spearman ρ = 0.9839, top-20 overlap 20/20**, mean |Δ| = 8.3e-05 against a mean
+|Shift| of 7.5e-04. All 4 sign flips sit in the smallest shifts
+(|Shift| < 2.1e-04); above the median |Shift| there are **zero** flips. So bf16
+changes only the part of the ranking that carries no decision. The
+model change (104M fp32 → 316M bf16) is a different story: ρ = 0.588, top-20
+13/20, mean |Δ| = 3.2e-03 (82% of the signal).
+
+Consequence for the gate in `PLAN.md` Phase 2: an absolute ρ ≥ 0.99 and a 98%
+sign agreement are **not attainable for `Shift_to_goal_end`**, because the metric
+is a difference of two ≈1 cosines and therefore carries only 2-3 significant
+digits. Use top-N overlap, ρ ≥ 0.98, and sign agreement restricted to genes
+above the measured noise floor (3 × median |Δ|). Details and the full tables:
+[REPORT-316M-ISP.md](REPORT-316M-ISP.md).
+
+## 13. Reproduce
 
 ```bash
 cd ~/workspace/research/Geneformer
@@ -301,15 +339,21 @@ cd ~/workspace/research/Geneformer
 .venv/bin/python analysis/11_prequant_vs_loadtime.py  # §9 pre-quantized vs load-time
 .venv/bin/python analysis/11b_load_time_bench.py      # §9 load times
 
+# end-to-end (§13) — profiled ISP on the 316M classifier, fp32 vs bf16, and analysis
+.venv/bin/python analysis/13_profile.py --label my-run --out docs/quantization/profiles -- \
+  .venv/bin/python analysis/07_ad_spleen_early_isp.py     # with GF_DTYPE=bf16 / ISP_EXPERIMENT=...
+.venv/bin/python analysis/14_compare_isp.py --a <run A> --b <run B> --label x
+.venv/bin/python analysis/15_isp_timing.py docs/quantization/profiles/<label>.log
+
 # any model / tissue / batch size via environment variables
 GENEFORMER_MODEL=Geneformer-V2-316M ADPD_TISSUE=AD_brain QW_FBS=100 \
   .venv/bin/python analysis/10d_real_workload_mem.py
 ```
 
 Artifacts are written under `quantized/` (gitignored) and raw results as JSON
-there as well.
+there as well. Profiled runs write to `docs/quantization/profiles/`.
 
-## 13. Related documents (Japanese)
+## 14. Related documents (Japanese)
 
 | Document | Content |
 |---|---|

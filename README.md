@@ -191,10 +191,17 @@ Headline results on the GB10 host (119.63 GiB unified memory):
   loss**: identical inference (bit-identical embeddings) but 2-6x slower
   loading. A pre-saved bf16 checkpoint reloads as fp32 unless `torch_dtype` is
   passed explicitly.
+- **Measured end to end on AD_spleen with a fine-tuned V2-316M classifier**:
+  bf16 cuts ISP wall time **2.28x** and GPU energy **3.82x** on a matched pair
+  (24 genes × 3 timepoints: 40 min 57 s / 47.7 Wh fp32 vs **17 min 58 s /
+  12.5 Wh** bf16) with **top-20 gene overlap 20/20**; the full 55-gene canary
+  runs in 46 min. The fine-tune itself takes 2 h and 137 Wh. Details:
+  [REPORT-316M-ISP.md](docs/quantization/REPORT-316M-ISP.md).
 
 | Document | Language | Content |
 |---|---|---|
 | [EXPERIMENT.md](docs/quantization/EXPERIMENT.md) | EN | **Start here.** Experiment log: all numbers, methodology, stage-by-stage guidance, pitfalls |
+| [REPORT-316M-ISP.md](docs/quantization/REPORT-316M-ISP.md) | EN | V2-316M classifier + AD_spleen ISP canary, fp32-vs-bf16 ranking gate, time/energy/load comparison |
 | [EXPERIMENT-jp.md](docs/quantization/EXPERIMENT-jp.md) | JP | 実験のまとめ（同上の日本語版） |
 | [PLAN.md](docs/quantization/PLAN.md) | JP | Quantization plan: goals, phases, acceptance gates |
 | [STAGES.md](docs/quantization/STAGES.md) | JP | Impact per pipeline stage (tokenization / embedding / ISP / fine-tuning) |
@@ -242,10 +249,17 @@ GB10（統合メモリ 119.63 GiB）での主な結果:
   推論は同一（埋め込みはビット単位で一致）なのにロードは 2〜6倍遅くなります。
   bf16 で事前保存したチェックポイントは `torch_dtype` を明示しないと
   fp32 として読み込まれます。
+- **V2-316M の分類器を作って AD_spleen で端から端まで実測**しました —
+  同一条件ペア（24遺伝子 × 3時点）で bf16 は ISP の所要時間を **2.28倍**、
+  GPU エネルギーを **3.82倍**削減（fp32 40分57秒 / 47.7 Wh 対 **bf16 17分58秒 /
+  12.5 Wh**）、そのうえで **top-20 の遺伝子一致は 20/20**。55遺伝子の canary は 46分、
+  微調整は 2時間・137 Wh でした。詳細は
+  [REPORT-316M-ISP-jp.md](docs/quantization/REPORT-316M-ISP-jp.md)。
 
 | ドキュメント | 言語 | 内容 |
 |---|---|---|
 | [EXPERIMENT-jp.md](docs/quantization/EXPERIMENT-jp.md) | JP | **最初にこれ。** 実験のまとめ（全測定値・方法・段階ごとの指針・落とし穴一覧） |
+| [REPORT-316M-ISP-jp.md](docs/quantization/REPORT-316M-ISP-jp.md) | JP | V2-316M 分類器 + AD_spleen の ISP canary、fp32 対 bf16 の順位判定、時間・エネルギー・負荷の比較 |
 | [EXPERIMENT.md](docs/quantization/EXPERIMENT.md) | EN | 同上（英語版） |
 | [PLAN.md](docs/quantization/PLAN.md) | JP | 量子化の全体計画（目的の整理・フェーズ・合格基準） |
 | [STAGES.md](docs/quantization/STAGES.md) | JP | 段階ごとの影響（tokenization / embedding / ISP / fine-tuning） |

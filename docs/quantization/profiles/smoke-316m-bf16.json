@@ -1,0 +1,30 @@
+{
+  "label": "smoke-316m-bf16",
+  "command": [
+    ".venv/bin/python",
+    "analysis/07_ad_spleen_early_isp.py"
+  ],
+  "wall_s": 65.38,
+  "wall_hms": "00:01:05",
+  "exit_code": 0,
+  "samples": 31,
+  "gpu_util_pct": {
+    "mean": 41.13,
+    "max": 96.0,
+    "active_fraction": 0.452
+  },
+  "gpu_power_w": {
+    "mean": 41.6,
+    "max": 88.58,
+    "min": 5.52
+  },
+  "gpu_energy_wh": 0.755,
+  "gpu_temp_c_max": 80.0,
+  "cpu_pct": {
+    "mean": 6.22,
+    "max": 11.73
+  },
+  "rss_peak_gib": 3.214,
+  "mem_available_min_gib": 103.77,
+  "interval_s": 2.0
+}

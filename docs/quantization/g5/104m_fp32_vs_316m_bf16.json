@@ -1,0 +1,92 @@
+{
+  "a": {
+    "path": "input/AD_spleen/results/isp/ad_spleen/ad_spleen_early_isp_stats_combined.csv",
+    "rows": 165
+  },
+  "b": {
+    "path": "input/AD_spleen/results/isp/ad_spleen_316m_bf16/ad_spleen_316m_bf16_early_isp_stats_combined.csv",
+    "rows": 165
+  },
+  "n_rows": 165,
+  "n_genes": 55,
+  "n_timepoints": 3,
+  "all": {
+    "spearman": 0.58762,
+    "pearson": 0.88386,
+    "sign_agreement": 0.7152,
+    "topn_overlap": 13,
+    "topn": 20,
+    "mean_abs_diff": 0.003179,
+    "max_abs_diff": 0.076338,
+    "mean_abs_shift": 0.003868
+  },
+  "per_timepoint": {
+    "3m": {
+      "n_genes": 55,
+      "spearman": 0.61732,
+      "sign_agreement": 0.6727,
+      "topn_overlap": 13,
+      "topn_shared": [
+        "CLEC9A",
+        "ITGA2B",
+        "CD19",
+        "CD4",
+        "CLU",
+        "CD33",
+        "THBS1",
+        "SORL1",
+        "ITGAM",
+        "CD3E",
+        "IRF7",
+        "NLRP3",
+        "IL3RA"
+      ],
+      "mean_abs_diff": 0.003273,
+      "max_abs_diff": 0.075244
+    },
+    "4p5m": {
+      "n_genes": 55,
+      "spearman": 0.47662,
+      "sign_agreement": 0.7273,
+      "topn_overlap": 12,
+      "topn_shared": [
+        "ITGA2B",
+        "CD19",
+        "CLEC9A",
+        "CEACAM1",
+        "SORL1",
+        "ITGAM",
+        "CD33",
+        "FGR",
+        "ABCA7",
+        "IRF7",
+        "BIN1",
+        "IL3RA"
+      ],
+      "mean_abs_diff": 0.003244,
+      "max_abs_diff": 0.061997
+    },
+    "6m": {
+      "n_genes": 55,
+      "spearman": 0.65452,
+      "sign_agreement": 0.7455,
+      "topn_overlap": 12,
+      "topn_shared": [
+        "CLEC9A",
+        "ITGA2B",
+        "CD19",
+        "CD33",
+        "SORL1",
+        "THBS1",
+        "CLU",
+        "ITGAM",
+        "NLRP3",
+        "MEF2C",
+        "IL3RA",
+        "INPP5D"
+      ],
+      "mean_abs_diff": 0.003019,
+      "max_abs_diff": 0.076338
+    }
+  }
+}

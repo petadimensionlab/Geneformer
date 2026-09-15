@@ -284,8 +284,40 @@ top-20 の一致 18/20 以上などを含む）は [STAGES.md](STAGES.md) と [P
 10. **`datasets==4.0.0` を維持すること**（`>=5` で `perturb_data` の
     `dataset.map` がハングします）と、**`transformers==4.46.3`** を維持すること
     （5.x では `SpecialTokensMixin` が壊れます）。
+11. **bf16 では埋め込みの書き出しが落ちます** — numpy に bfloat16 が無いため、
+    `embs.cpu().numpy()` が `TypeError: Got unsupported ScalarType BFloat16` になります
+    （`emb_extractor.py:256`・283・702、`perturber_utils.py:824`）。
+    `.cpu().numpy()` の前に `.float()` を入れてください（fp32 では無変換）。
+    パッチ: `patches/bf16/`
+12. **1セルの同点で微調整の評価が全滅します。** `evaluation_utils.vote()` は
+    ロジットが完全に同値のとき文字列 `"tie"` を返し、それが sklearn に混ざって
+    `ValueError: Mix of label input types (string and number)` になります。
+    checkpoint は保存済みですが、実行は異常終了し指標とレポートが出ません。
+    同点は数値で決着させてください（最小クラスインデックス）。パッチ: `patches/eval_tie/`
 
-## 12. 再現方法
+## 12. エンドツーエンドの ISP 計測（V2-316M・AD_spleen）— [REPORT-316M-ISP-jp.md](REPORT-316M-ISP-jp.md) 参照
+
+316M の経路が通ったあと、人工バッチではなく AD_spleen の実ワークロードで全体を計測しました。
+
+| 実行 | bf16 | fp32 | 変化 |
+|---|---|---|---|
+| ISP canary 55遺伝子 × 3時点 × 200セル | **46分25秒、34.9 Wh** | 約1時間46分、約133 Wh *(推定)* | 2.28倍高速・エネルギー3.82倍削減 |
+| ISP 同一条件ペア 24遺伝子 × 3時点 × 100セル | **17分58秒、12.5 Wh、41.6 W** | 40分57秒、47.7 Wh、69.9 W | 時間 −56%・エネルギー −74%・電力 −40% |
+| 微調整 1エポック（3,057ステップ） | **1時間59分46秒、137.5 Wh** | 約8時間 *(推定)* | 約4.0倍 |
+
+同一条件ペアの順位一致（同じ 316M checkpoint、dtype だけが違う）:
+**スピアマン ρ = 0.9839、top-20 一致 20/20**、平均 |Δ| = 8.3e-05 対 平均 |Shift| 7.5e-04。
+符号反転 4件はすべて最小のシフト（|Shift| < 2.1e-04）に集中し、
+**|Shift| が中央値以上の領域では反転ゼロ**です。つまり bf16 は判断に影響しない部分しか動かしません。
+一方、モデル変更（104M fp32 → 316M bf16）は ρ = 0.588、top-20 13/20、平均 |Δ| = 3.2e-03（シグナルの82%）で、
+まったく別の話です。
+
+`PLAN.md` フェーズ2の基準への影響: `Shift_to_goal_end` は約1のコサイン同士の差で
+有効数字が2〜3桁しかないため、**ρ ≥ 0.99 と符号一致98%は達成不能な基準**です。
+top-N 一致、ρ ≥ 0.98、そして**ノイズフロア（中央値|Δ|の3倍）以上の遺伝子に限った符号一致**
+を使ってください。詳細な表は [REPORT-316M-ISP-jp.md](REPORT-316M-ISP-jp.md) にあります。
+
+## 13. 再現方法
 
 ```bash
 cd ~/workspace/research/Geneformer
@@ -297,6 +329,12 @@ cd ~/workspace/research/Geneformer
 .venv/bin/python analysis/11_prequant_vs_loadtime.py  # §9 事前量子化とロード時量子化
 .venv/bin/python analysis/11b_load_time_bench.py      # §9 ロード時間
 
+# エンドツーエンド（§12）— 316M 分類器で fp32 / bf16 の ISP を計測つきで実行し、解析
+.venv/bin/python analysis/13_profile.py --label my-run --out docs/quantization/profiles -- \
+  .venv/bin/python analysis/07_ad_spleen_early_isp.py     # GF_DTYPE=bf16 / ISP_EXPERIMENT=... と併用
+.venv/bin/python analysis/14_compare_isp.py --a <実行A> --b <実行B> --label x
+.venv/bin/python analysis/15_isp_timing.py docs/quantization/profiles/<label>.log
+
 # モデル・組織・batch は環境変数で切り替えられます
 GENEFORMER_MODEL=Geneformer-V2-316M ADPD_TISSUE=AD_brain QW_FBS=100 \
   .venv/bin/python analysis/10d_real_workload_mem.py
@@ -304,7 +342,7 @@ GENEFORMER_MODEL=Geneformer-V2-316M ADPD_TISSUE=AD_brain QW_FBS=100 \
 
 アーティファクトと JSON の生データは `quantized/` に出力されます（git 管理外）。
 
-## 13. 関連ドキュメント
+## 14. 関連ドキュメント
 
 | ドキュメント | 内容 |
 |---|---|

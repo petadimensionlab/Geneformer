@@ -1,0 +1,30 @@
+{
+  "label": "isp-316m-bf16-sub24",
+  "command": [
+    ".venv/bin/python",
+    "analysis/07_ad_spleen_early_isp.py"
+  ],
+  "wall_s": 1078.93,
+  "wall_hms": "00:17:58",
+  "exit_code": 0,
+  "samples": 526,
+  "gpu_util_pct": {
+    "mean": 40.27,
+    "max": 96.0,
+    "active_fraction": 0.443
+  },
+  "gpu_power_w": {
+    "mean": 41.63,
+    "max": 89.87,
+    "min": 5.06
+  },
+  "gpu_energy_wh": 12.478,
+  "gpu_temp_c_max": 80.0,
+  "cpu_pct": {
+    "mean": 6.65,
+    "max": 14.78
+  },
+  "rss_peak_gib": 3.726,
+  "mem_available_min_gib": 98.98,
+  "interval_s": 2.0
+}
