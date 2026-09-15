@@ -22,6 +22,7 @@ Every number below is measured unless marked *(extrapolated)*.
 | 2 | canary ISP (full) | V2-316M classifier | bf16 | 55 genes × 3 timepoints × 200 cells | `input/AD_spleen/results/isp/ad_spleen_316m_bf16/` |
 | 3 | G5 pair, reference | same classifier | **fp32** | 24 genes × 3 timepoints × 100 cells | `.../isp/ad_spleen_316m_fp32_sub24/` |
 | 4 | G5 pair, candidate | same classifier | **bf16** | identical to #3 | `.../isp/ad_spleen_316m_bf16_sub24/` |
+| 5 | held-out evaluation (G6) | V2-316M classifier | fp32 | 26,116 held-out cells (replicate _3) | `input/AD_spleen/results/tables/adpd_finetuned_*` |
 
 Runs 3 and 4 use the **same checkpoint**, the same cells, the same genes and the
 same settings; only the compute dtype differs. That is the matched pair the G5
@@ -153,6 +154,7 @@ draws **68% more power** while it works.
 |---|---|---|---|
 | ISP canary 55 genes × 3 tp × 200 cells | **46 min 25 s, 34.9 Wh** | ≈ 1 h 46 m, ≈ 133 Wh | 2.28x / 3.82x |
 | fine-tune 1 epoch (3,057 steps) | **1 h 59 m 46 s, 137.5 Wh** | ≈ 8 h, ≈ 550 Wh | ~4.0x |
+| held-out evaluation, 26,116 cells (fp32) | **1 h 26 m 43 s, 131.5 Wh, 91.0 W mean** | n/a (already fp32) | — |
 
 The fine-tune extrapolation uses the per-step ratio measured directly at
 batch 8 / seq 4096 (`analysis/10e_train_mem_probe.py`: 316M fp32 10.05 s vs
@@ -226,14 +228,55 @@ Rank-agreement results: `docs/quantization/g5/*.json`.
 
 ---
 
-## 8. Open items
+## 8. Classifier accuracy (gate G6): 316M vs 104M
 
-- **Held-out accuracy of the 316M classifier (G6)** — the evaluation pass over
-  26,116 held-out cells takes ≈ 87 min at fp32; it is the last remaining
-  measurement. The 104M reference is accuracy 0.9312 / macro-F1 0.8867.
+The 316M classifier was evaluated on the same 26,116 held-out cells (replicate
+_3) with the same script as the 104M one, so the two are directly comparable.
+
+| model | accuracy | macro F1 | per-class outcome |
+|---|---|---|---|
+| frozen embeddings + logistic regression (no fine-tuning) | 0.8755 | 0.8390 | reference floor |
+| **V2-104M** fine-tuned (Aug 24 run) | **0.9312** | **0.8867** | — |
+| **V2-316M** fine-tuned (this run) | **0.9320** | **0.8890** | 11 of 25 classes improved |
+| difference | **+0.0008** | **+0.0023** | mean per-class Δ +0.0023 |
+
+**Reading: on cell-type classification the 316M classifier is a statistical tie
+with 104M.** Tripling the model (better pretraining: MLM loss 3.64 vs 4.09,
+mask accuracy 0.137 vs 0.114) buys +0.08 percentage points of accuracy and
++0.23 points of macro F1 — the task appears saturated around 93%, where the
+fine-tuning data, not the pretrained representation, is the limiting factor.
+
+Where it moves: Basophils +0.044, Gamma.Delta.T.cells +0.034,
+Megakaryocytes +0.029 (all rare classes) against cDC.2 −0.038 and
+Immature.T.cells −0.025. So the changes are concentrated in low-support classes,
+consistent with noise rather than a systematic gain.
+
+**Consequence for choosing a model.** Together with §4 this says the 316M
+upgrade is *not* a free improvement:
+
+- cell-type classification: indistinguishable (this section),
+- ISP gene ranking: substantially different (top-20 13/20, §4),
+- cost: 2 h more per tissue for fine-tuning, plus a 316M classifier per tissue,
+- benefit: better MLM loss, which never appears in the pipeline's deliverables.
+
+So the decision to move to 316M has to be justified on the ISP results
+themselves (biological plausibility), not on "the bigger model must be better".
+bf16, by contrast, is free: same ranking, 2.28x faster, 3.82x less energy.
+
+Evaluation cost (profiled): **1 h 26 min 43 s, 131.5 Wh, 90.97 W mean,
+94.96% GPU average, 87 °C peak** for 26,116 cells in fp32 — the most
+power-hungry phase per hour of the whole pipeline, because it is a pure
+forward pass at a small batch with no idle gaps.
+
+## 9. Open items
+
+- **G6 is resolved** — the held-out accuracy of the 316M classifier is measured
+  and is a tie with 104M (§8).
 - **Other tissues** — the canary covers AD_spleen only. Each tissue needs its
   own 316M classifier (1-2 h fine-tune) before an ISP run.
 - **Do not use 4-bit for ISP** — nf4 changes gene rankings (top-100 overlap
   87/100, see EXPERIMENT.md §6); bf16 is the choice here.
 - The 104M pool result for AD_spleen is untouched; the 316M run writes to its own
   `ISP_EXPERIMENT` directory, so both rankings remain available.
+- The 104M per-tissue evaluation tables were copied to
+  `input/AD_spleen/results/tables/backup_104M/` before this run overwrote them.

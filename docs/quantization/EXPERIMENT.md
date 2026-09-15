@@ -320,6 +320,12 @@ changes only the part of the ranking that carries no decision. The
 model change (104M fp32 → 316M bf16) is a different story: ρ = 0.588, top-20
 13/20, mean |Δ| = 3.2e-03 (82% of the signal).
 
+On cell-type classification the 316M classifier turns out to be a **tie with
+104M** (accuracy 0.9320 vs 0.9312, macro F1 0.8890 vs 0.8867 over 26,116
+held-out cells; 11 of 25 classes improved, concentrated in low-support classes).
+So the model upgrade buys nothing on that task while changing the ISP ranking —
+it has to be justified biologically, whereas bf16 needs no justification at all.
+
 Consequence for the gate in `PLAN.md` Phase 2: an absolute ρ ≥ 0.99 and a 98%
 sign agreement are **not attainable for `Shift_to_goal_end`**, because the metric
 is a difference of two ≈1 cosines and therefore carries only 2-3 significant
