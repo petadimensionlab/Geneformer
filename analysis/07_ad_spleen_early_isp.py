@@ -72,11 +72,18 @@ CELLCLASSIFIER_DIR = resolve_classifier_dir(ROOT, GF_ROOT, MODEL_NAME)
 DISEASE = "AD"
 TISSUE = "spleen"
 EXPERIMENT = resolve_experiment(DISEASE, TISSUE)
+# Optional experiment-label override (e.g. ISP_EXPERIMENT=ad_spleen_ly6chi) so a
+# cell-type-restricted run writes to its own dir instead of overwriting the pool run.
+_experiment_override = os.environ.get("ISP_EXPERIMENT")
+if _experiment_override:
+    EXPERIMENT = _experiment_override
+    print(f"[override] ISP_EXPERIMENT -> {EXPERIMENT}", flush=True)
 ISP_DIR = isp_dir_for(ROOT, EXPERIMENT)
 OUT_CSV = combined_csv_path(ROOT, EXPERIMENT)
 
 # Spleen immune-cell pool. Low-signal / non-immune / lineage-noise cells dropped:
 # Erythroblasts, Megakaryocytes, Basophils, Fibroblasts, endothelial cells.
+# Override with ISP_CELLTYPES (comma-separated) to restrict to specific cell types.
 SPL_IMMUNE_POOL = [
     "Ly6c.high.classical.Monocytes",
     "Ly6c.low.nonclassical.Monocytes",
@@ -98,6 +105,10 @@ SPL_IMMUNE_POOL = [
     "Plasma.cells",
     "Germinal.Center.B.cells",
 ]
+_cell_override = os.environ.get("ISP_CELLTYPES")
+if _cell_override:
+    SPL_IMMUNE_POOL = [c.strip() for c in _cell_override.split(",") if c.strip()]
+    print(f"[override] ISP_CELLTYPES -> {SPL_IMMUNE_POOL}", flush=True)
 
 # Timepoints compared: (label, [samples4 AD/start, samples4 WT/goal]).
 TIMEPOINTS = [
