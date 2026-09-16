@@ -16,7 +16,7 @@ is detected in <1% of the target cells cannot carry a meaningful shift.
 Writes docs/quantization/isp-model-comparison/{gene_table.csv,summary.json}
 and prints a report to stdout.
 
-Usage: .venv/bin/python analysis/17_isp_model_compare.py
+Usage: .venv/bin/python templates/template_isp_model_compare.py
 """
 from __future__ import annotations
 

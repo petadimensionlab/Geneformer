@@ -88,6 +88,6 @@ analysis/ref
 # literature records and derived data stay on this machine; do not commit them.
 /docs/quantization/isp-model-comparison/
 /docs/quantization/expression/
-# analysis/16-21_*.py are committed as TEMPLATES (see the banner in each file).
+# templates/template_*.py are committed as TEMPLATES (see the banner in each file).
 # They embed an example verdict table / report prose / search queries; the
 # outputs they produce stay local (see the rules above).

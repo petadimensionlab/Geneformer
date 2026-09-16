@@ -13,7 +13,7 @@ the abstract sentences that carry direction-of-effect information, so the
 traced to a specific paper.
 
 Usage:
-    .venv/bin/python analysis/18_literature_check.py [--batch 1|2|3|all]
+    .venv/bin/python templates/template_literature_check.py [--batch 1|2|3|all]
 """
 from __future__ import annotations
 

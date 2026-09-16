@@ -10,7 +10,7 @@ Reads docs/quantization/isp-model-comparison/{gene_table.csv,summary.json,adjudi
 and docs/quantization/expression/AD_spleen.json, writes PNGs into
 docs/quantization/isp-model-comparison/figures/<lang>/.
 
-Usage: .venv/bin/python analysis/20_report_figures.py [--lang ja|en|both]
+Usage: .venv/bin/python templates/template_report_figures.py [--lang ja|en|both]
 
 Japanese uses the Noto Sans CJK JP font; the script fails loudly if it cannot be
 resolved, and missing glyphs are turned into errors, so a figure never ships with

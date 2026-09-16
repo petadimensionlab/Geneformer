@@ -7,9 +7,9 @@ example from the AD_spleen 104M-vs-316M check (2026-09). Re-derive every number
 and re-verify every PMID before reusing it on another tissue or model.
 
 Inputs (all produced earlier in this task):
-  docs/quantization/isp-model-comparison/gene_table.csv      (17_isp_model_compare.py)
-  docs/quantization/expression/AD_spleen.json                (16_gene_expression_by_celltype.py)
-  docs/quantization/isp-model-comparison/literature/*.json   (18_literature_check.py + subagents)
+  docs/quantization/isp-model-comparison/gene_table.csv      (template_isp_model_compare.py)
+  docs/quantization/expression/AD_spleen.json                (template_expression_by_celltype.py)
+  docs/quantization/isp-model-comparison/literature/*.json   (template_literature_check.py + subagents)
   docs/quantization/isp-model-comparison/literature/verified-pmids.json
 
 Two tiers of literature evidence are kept apart on purpose:

@@ -20,7 +20,7 @@ Also reports the cell composition (AD vs WT) of the queried pool, which is the
 "cell list" side of the same question.
 
 Usage:
-    .venv/bin/python analysis/16_gene_expression_by_celltype.py
+    .venv/bin/python templates/template_expression_by_celltype.py
 Environment:
     ADPD_TISSUE (default AD_spleen), IS_CELLTYPES (comma list; default = the
     spleen immune pool used by 07_ad_spleen_early_isp.py), EXPR_OUT (default

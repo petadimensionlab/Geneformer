@@ -6,13 +6,13 @@ The numbers, literature verdicts and prose baked into this file are a worked
 example from the AD_spleen 104M-vs-316M check (2026-09). Re-derive every number
 and re-verify every PMID before reusing it on another tissue or model.
 
-Usage: .venv/bin/python analysis/21_build_report_docx.py [--lang ja|en|both]
+Usage: .venv/bin/python templates/template_build_report_docx.py [--lang ja|en|both]
 
 Outputs (docs/quantization/isp-model-comparison/):
     REPORT-ISP-104M-vs-316M.docx      (+ .pdf)  English
     REPORT-ISP-104M-vs-316M-jp.docx   (+ .pdf)  Japanese
 
-Figures come from figures/<lang>/ (see 20_report_figures.py). Every literature
+Figures come from figures/<lang>/ (see template_report_figures.py). Every literature
 claim carries a numbered reference whose PMID/DOI was verified against Europe
 PMC; the reference numbering is assigned by order of first citation in a
 discarded first pass, so the printed list has no gaps.
@@ -292,12 +292,12 @@ S: dict[str, dict] = {
         "s6a": "本報告の数値・図・表は、すべてリポジトリ内のスクリプトで再生成できます。",
         "s6th": ["スクリプト", "内容"],
         "s6rows": [
-            ["analysis/16_gene_expression_by_celltype.py", "細胞種・病態別の遺伝子検出率（発現の広さ）"],
-            ["analysis/17_isp_model_compare.py", "3種類の差の分離、符号反転、候補リストの比較"],
-            ["analysis/18_literature_check.py", "Europe PMC からの文献取得（遺伝子ごとの検索式を内蔵）"],
-            ["analysis/19_adjudicate.py", "文献判定の統合と PMID の機械照合"],
-            ["analysis/20_report_figures.py", "図1〜図5の生成（日英）"],
-            ["analysis/21_build_report_docx.py", "本報告（DOCX、日英）の生成"],
+            ["templates/template_expression_by_celltype.py", "細胞種・病態別の遺伝子検出率（発現の広さ）"],
+            ["templates/template_isp_model_compare.py", "3種類の差の分離、符号反転、候補リストの比較"],
+            ["templates/template_literature_check.py", "Europe PMC からの文献取得（遺伝子ごとの検索式を内蔵）"],
+            ["templates/template_literature_adjudicate.py", "文献判定の統合と PMID の機械照合"],
+            ["templates/template_report_figures.py", "図1〜図5の生成（日英）"],
+            ["templates/template_build_report_docx.py", "本報告（DOCX、日英）の生成"],
         ],
         "s6b": "生データは docs/quantization/isp-model-comparison/ 以下（gene_table.csv、summary.json、adjudication.csv、literature/、figures/）にあります。",
         "s7a": "PMID・DOI は Europe PMC API で 1 件ずつ照合し、題名・雑誌・年が一致することを確認済みです。被引用の無い文献は掲載していません。",
@@ -480,12 +480,12 @@ S: dict[str, dict] = {
         "s6a": "Every number, figure and table in this report can be regenerated with the scripts in the repository.",
         "s6th": ["Script", "Purpose"],
         "s6rows": [
-            ["analysis/16_gene_expression_by_celltype.py", "Per-cell-type, per-condition gene detection rates (expression breadth)"],
-            ["analysis/17_isp_model_compare.py", "Separation of the three sources of difference, sign flips, candidate-list comparison"],
-            ["analysis/18_literature_check.py", "Europe PMC retrieval with the per-gene queries built in"],
-            ["analysis/19_adjudicate.py", "Merges the literature verdicts and machine-verifies the PMIDs"],
-            ["analysis/20_report_figures.py", "Generates Figures 1-5 (Japanese and English)"],
-            ["analysis/21_build_report_docx.py", "Generates this report in DOCX (Japanese and English)"],
+            ["templates/template_expression_by_celltype.py", "Per-cell-type, per-condition gene detection rates (expression breadth)"],
+            ["templates/template_isp_model_compare.py", "Separation of the three sources of difference, sign flips, candidate-list comparison"],
+            ["templates/template_literature_check.py", "Europe PMC retrieval with the per-gene queries built in"],
+            ["templates/template_literature_adjudicate.py", "Merges the literature verdicts and machine-verifies the PMIDs"],
+            ["templates/template_report_figures.py", "Generates Figures 1-5 (Japanese and English)"],
+            ["templates/template_build_report_docx.py", "Generates this report in DOCX (Japanese and English)"],
         ],
         "s6b": "Raw data live under docs/quantization/isp-model-comparison/ (gene_table.csv, summary.json, adjudication.csv, literature/, figures/).",
         "s7a": "Every PMID and DOI was checked one by one against the Europe PMC API and its title, journal and year confirmed. "
