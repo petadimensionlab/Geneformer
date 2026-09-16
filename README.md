@@ -232,10 +232,6 @@ Headline results on the GB10 host (119.63 GiB unified memory):
   12.5 Wh** bf16) with **top-20 gene overlap 20/20**; the full 55-gene canary
   runs in 46 min. The fine-tune itself takes 2 h and 137 Wh. Details:
   [REPORT-316M-ISP.md](docs/quantization/REPORT-316M-ISP.md).
-- **A 316M classifier does not improve cell-type classification.** On AD_spleen
-  it ties 104M (accuracy 0.9320 vs 0.9312, macro-F1 0.8890 vs 0.8867 over 26,116
-  held-out cells) while substantially changing the ISP gene ranking, so moving
-  to the bigger model needs a biological justification — bf16 needs none.
 
 | Document | Language | Content |
 |---|---|---|
