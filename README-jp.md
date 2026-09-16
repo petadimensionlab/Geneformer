@@ -85,6 +85,32 @@ Apple Silicon 上でエンドツーエンド実行:
      `adapter_model.bin`)を含む場合のみチェックポイントを再利用可能とみなし、
      空・不完全な `ksplit*` ディレクトリは自動削除して、モデルファイル欠落エラーになる
      代わりに新規 fine-tune を実行します。
+   - **MPS の INT_MAX 制約（V2-316M で顕在化）** — MPS の attention は
+     `batch × heads × seq²` 要素のスコアテンソルを確保します。316M は 18 ヘッドなので
+     系列長 4096 では **batch 8 で 2.42e9 要素**となり `INT_MAX (2^31 = 2.147e9)` を
+     超えて `RuntimeError: MPSGraph does not support tensor dims larger than INT_MAX`
+     で**最初の backward で即落ち**します（104M は 12 ヘッドで 1.61e9 のため batch 8 でも通る）。
+     対策は次のいずれかです。
+     - **batch を 4 以下にする**（1.21e9。実測で安定。本ワークスペースの 316M 解析はこれで実行）
+     - 系列長を切り詰める（batch 8 なら 3072 で 1.36e9、2048 で 6.0e8）
+
+     `gradient_checkpointing` は活性化メモリを減らしますが、この制約には効きません。
+     同じ上限は ISP と `EmbExtractor` の `forward_batch_size` にも当てはまるので、
+     316M を MPS で回すときは `forward_batch_size` も 4 に落としてください。
+   - **チェックポイント（中断に強い学習）** — 長時間の fine-tune の前に
+     `cp patches/checkpoints/classifier.py geneformer_hf/geneformer/classifier.py`
+     を適用してください。上流は `save_strategy="epoch"` / `save_total_limit=1` を
+     ハードコードしていたため、**エポック途中で落ちると完了済みの全ステップが失われます**
+     （V2-316M の MPS 1 エポックは約 7 時間）。パッチ版の `Classifier` は
+     ステップ単位のチェックポイントを既定にし（ユーザー指定が優先）、
+     `trainer.train(resume_from_checkpoint=...)` で最新の `checkpoint-*` から自動再開します。
+     詳細: `patches/checkpoints/README.md`。
+   - **`download.sh` はローカルパッチを打ち消します** — `geneformer/*.py` を取り直すため、
+     fresh checkout の直後は bf16 / device パッチが外れています（実際にこれで
+     `GF_DTYPE=bf16` の ISP が `TypeError: Got unsupported ScalarType BFloat16` で落ちました）。
+     `./download.sh` の後は必ず再適用してください:
+     `cp patches/bf16/emb_extractor.py patches/bf16/perturber_utils.py
+     patches/checkpoints/classifier.py geneformer_hf/geneformer/`。
 4. **In silico perturbation**(`analysis/07_in_silico_perturbation.py`、チュートリアル
    ノートブック移植)— MPS で**動作**。
 

@@ -89,6 +89,36 @@ Fix applied in `06_finetune.py`: keep
      (`pytorch_model.bin` / `model.safetensors` / `adapter_model.bin`); any empty
      or incomplete `ksplit*` dir is deleted automatically so a fresh fine-tune
      runs instead of erroring on a missing model file.
+   - **MPS INT_MAX limit (bites V2-316M)** — MPS attention materialises a
+     `batch × heads × seq²` score tensor. 316M has 18 heads, so at sequence
+     length 4096 **batch 8 needs 2.42e9 elements**, exceeding
+     `INT_MAX (2^31 = 2.147e9)` and aborting in the *first* backward pass with
+     `RuntimeError: MPSGraph does not support tensor dims larger than INT_MAX`.
+     (104M has 12 heads → 1.61e9, which is why batch 8 works there.)
+     Two fixes:
+     - **Use batch ≤ 4** (1.21e9; stable in practice — the 316M runs in this
+       workspace use it).
+     - Truncate the sequence length (batch 8: 3072 → 1.36e9, 2048 → 6.0e8).
+
+     `gradient_checkpointing` reduces activation memory but does **not** lift this
+     limit. The same ceiling applies to ISP and to `EmbExtractor`'s
+     `forward_batch_size`, so drop that to 4 as well when running 316M on MPS.
+   - **Checkpoints (loss-proof fine-tuning)** — apply
+     `cp patches/checkpoints/classifier.py geneformer_hf/geneformer/classifier.py`
+     before any long fine-tune. Upstream hard-coded
+     `save_strategy="epoch"` / `save_total_limit=1`, so an interruption
+     mid-epoch (OOM, crash, sleep, kill) discards **every completed step**
+     — one V2-316M epoch on MPS is ~7 h. The patched `Classifier` defaults to
+     *step* checkpoints (user settings win) and resumes automatically from the
+     newest `checkpoint-*` via `trainer.train(resume_from_checkpoint=...)`.
+     Details: `patches/checkpoints/README.md`.
+   - **`download.sh` reverts local patches** — it re-fetches `geneformer/*.py`,
+     so a fresh checkout silently drops the bf16 / device patches (this is how
+     a `GF_DTYPE=bf16` ISP run ended up failing with
+     `TypeError: Got unsupported ScalarType BFloat16`). Re-apply after every
+     `./download.sh`:
+     `cp patches/bf16/emb_extractor.py patches/bf16/perturber_utils.py
+     patches/checkpoints/classifier.py geneformer_hf/geneformer/`.
 4. **In silico perturbation** (`analysis/07_in_silico_perturbation.py`, ported
    from the tutorial notebook) — **works** on MPS.
 

@@ -122,7 +122,12 @@ classifier = Classifier(
         "gradient_checkpointing": True,
         "gradient_checkpointing_kwargs": {"use_reentrant": False},
         "seed": SEED,
-        "save_strategy": "epoch",
+        # Periodic step checkpoints so an interrupted run (OOM/crash/power)
+        # resumes instead of losing the whole epoch. Override with
+        # FINETUNE_SAVE_STEPS.
+        "save_strategy": "steps",
+        "save_steps": int(os.environ.get("FINETUNE_SAVE_STEPS", "200")),
+        "save_total_limit": 2,
         "logging_steps": 100,
         "report_to": "none",
         **({"bf16": True} if USE_BF16 else {}),
