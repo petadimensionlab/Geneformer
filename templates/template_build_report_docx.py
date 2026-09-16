@@ -133,14 +133,63 @@ S: dict[str, dict] = {
         "title": "V2-104M と V2-316M の比較、および文献との照合",
         "subtitle": "AD_spleen（脾臓免疫細胞）／55遺伝子 × 3時点／文献 {n}件（全件 PMID・DOI を機械照合）",
         "meta": "作成日 2026-09-15　リポジトリ petadimensionlab/Geneformer　データ AD_spleen（19細胞集団、AD 31,371セル・WT 31,391セル）",
+        "q_h": "2.1 何を知りたいか（問いの列挙）",
+        "q_intro": "このレポートが答えようとしている問いは次の4つです。Q4 は途中で判断材料から外したため、"
+                   "その理由も記します。",
+        "q_items": [
+            "Q1（主）: モデルを 104M から 316M に替えると、遺伝子欠失の結果は質的に変わるか。変わるなら、それは測定ノイズか本物か。",
+            "Q2（主）: 対象とした 55 遺伝子について、文献は「欠失で改善」と「欠失で悪化」のどちらを示しているか。",
+            "Q3（主）: 対象とした 19 細胞集団について、文献は AD での変化を示しているか（このデータの対象として妥当か）。",
+            "Q4（除外）: 316M 分類器の精度は 104M より高いか。→ ご指示により判断材料から外しました（測定値そのものは別文書の記録として残しています）。",
+        ],
+        "q_scope_h": "2.2 このレポートで答えないこと（範囲外）",
+        "q_scope": "ISP の予測が生体内で正しいかどうか。これには CRISPRi や Perturb-seq など別モダリティでの検証が必要で、"
+                   "本作業のデータだけでは判定できません。本レポートが言えるのは「モデル間で結果がどう違うか」"
+                   "「その向きが公表された生物学と整合するか」までです。",
+        "proc_h": "3.1 実施したプロセス（順序と、その理由）",
+        "proc_intro": "作業は次の順で行いました。各段は前段の結論を前提にしており、順序を入れ替えると解釈が変わります。",
+        "proc_items": [
+            "① ISP 出力の突き合わせ（順位・符号）: まず「何がどれだけ違うか」を測る。",
+            "② 差の原因の分離（精度／細胞サンプリング／モデル）: 「違う」がノイズでないことを示すため。",
+            "③ 発現量フィルタ（標的細胞での検出率）: そもそもシグナルを担えない遺伝子を判定から外すため。",
+            "④ 文献検索（Europe PMC）と PMID の機械照合: 判定の一次資料を作り、引用の誤りを排除するため。",
+            "⑤ 判定の統合（証拠を第1層／第2層に分離）: 推測で空白を埋めないため。",
+            "⑥ 感度分析: 結論が個別の判定にどれだけ依存するかを確認するため。",
+            "⑦ 図とレポートの生成（日英）: 上記を第三者が検証できる形にするため。",
+        ],
+        "bound_h": "5.4 解釈の境界（どこまで言ってよいか）",
+        "bound_direct": "測定から直接言えること: モデル差はノイズではない（平均差 84.9%、符号反転 18/55）。"
+                        "標的細胞でよく発現する遺伝子でも 13/44 が逆転する。文献が方向を示せる遺伝子のうち、"
+                        "両モデルが争う 7 個では 316M の向きが 6 個で一致した。",
+        "bound_beyond": "測定を超える解釈（仮説として提示）: 316M の方が生物学的に忠実である可能性。"
+                        "これは 7 個（C4 基準では 6 個）の判定に依存しており、統計的な一般化はできません。",
+        "bound_cannot": "言えないこと: どちらの ISP 予測が生体内で正しいか。他組織・他モデルへの一般化。"
+                        "系統マーカー（CD8A など）のシフトの生物学的意味。",
+        "trace_h": "7. 追跡マトリクス（問い → プロセス → 結果 → 解釈）",
+        "trace_intro": "依頼された問いと、実際に行ったこと・得られた結果・その解釈の対応です。"
+                       "「整合性」欄が「一致」以外の行は、答えが部分的である理由を明記しています。",
+        "trace_th": ["問い", "プロセス", "結果（節）", "解釈（節）", "整合性"],
+        "trace_rows": [
+            ["Q1 質的な違いの有無と、それがノイズか", "①②③", "§4.1 差の分離（84.9% 対 12.3/17.5%）、§4.2 符号反転 18/55",
+             "モデル選択が結論を左右する。ノイズでは説明できない", "一致"],
+            ["Q2 55 遺伝子について文献の向き", "④⑤", "§4.4 争いのある 7 遺伝子で 316M 6・104M 1",
+             "316M の向きがより文献に合う（ただし決定的ではない）", "一部（判定できたのは 7 遺伝子、C4 基準では 6）"],
+            ["Q3 19 細胞集団について文献の変化", "③④", "§4.7 19 集団の文献表",
+             "リストは文献と矛盾しないが、上流の間引きで細胞数の変化は検証不能", "部分（データ制約を明示）"],
+            ["Q4 分類器の精度比較", "—", "—", "—", "ご指示どおり除外（記録は別文書）"],
+            ["（追加）両モデルが文献と食い違う遺伝子", "④⑤", "§4.5 7 遺伝子（TNF・IL1B・C1q・S100A8/A9）",
+             "分泌性メディエーターに偏る。手法側の系統的な弱点", "追加知見（依頼外だが解釈の限界に直結）"],
+            ["（追加）チーム基準 C4（≥500 細胞）との整合", "③", "§4.6 の注記: 9 遺伝子が不合格（TREM2 を含む）",
+             "TREM2 の 316M 一致は C4 で落ちる。数え直すと 5 対 1", "追加知見（判定の頑健性の確認）"],
+        ],
         "s1": "1. 要約", "s2": "2. 背景と目的", "s3": "3. 方法", "s4": "4. 結果",
-        "s5": "5. 考察", "s6": "6. 再現手順", "s7": "7. 引用文献",
-        "s31": "3.1 データと計算条件", "s32": "3.2 3種類の差を分離する",
-        "s33": "3.3 発現量による解釈可能性フィルタ", "s34": "3.4 文献調査と証拠の階層",
+        "s5": "5. 考察", "s6": "6. 再現手順", "s7": "8. 引用文献",
+        "s31": "3.2 データと計算条件", "s32": "3.3 3種類の差を分離する",
+        "s33": "3.4 発現量による解釈可能性フィルタ", "s34": "3.5 文献調査と証拠の階層",
         "s41": "4.1 モデル差は測定ノイズではない", "s42": "4.2 遺伝子の3分の1で符号が逆転する",
         "s43": "4.3 候補遺伝子リストが入れ替わる", "s44": "4.4 文献との照合：316M の向きが一致する例が多い",
         "s45": "4.5 両モデルがそろって文献と食い違う遺伝子群", "s46": "4.6 シフトの大きさは発現の広さに依存する",
-        "s47": "4.7 細胞集団リストの文献照合", "s51": "5.1 言えること", "s52": "5.2 限界", "s53": "5.3 推奨",
+        "s47": "4.7 細胞集団リストの文献照合", "s51": "5.1 言えること", "s52": "5.2 限界", "s53": "5.3 推奨", "s54": "5.4 解釈の境界（どこまで言ってよいか）",
         "sum_intro": "知りたかったのは「モデルを 104M から 316M に替えると、遺伝子欠失の結果は質的に変わるのか」です。"
                      "結論は「変わる。しかも測定ノイズではなく、遺伝子の3分の1で向き（正負）が逆転する」でした。"
                      "どちらが正しいかは、片方のモデルでは決められません。文献と突き合わせると 316M の向きが一致する例が多く、"
@@ -311,14 +360,65 @@ S: dict[str, dict] = {
         "title": "V2-104M versus V2-316M: comparison and literature check",
         "subtitle": "AD_spleen (splenic immune cells) / 55 genes x 3 timepoints / {n} references (all PMID/DOI machine-verified)",
         "meta": "Prepared 2026-09-15  Repo petadimensionlab/Geneformer  Data AD_spleen (19 cell populations; 31,371 AD and 31,391 WT cells)",
+        "q_h": "2.1 What we want to know (the questions)",
+        "q_intro": "This report answers four questions. Q4 was dropped from the decision criteria part-way through; "
+                   "the reason is recorded here.",
+        "q_items": [
+            "Q1 (primary): does replacing the model (104M -> 316M) change the outcome of gene deletion qualitatively, and if so, is that difference measurement noise or real?",
+            "Q2 (primary): for the 55 target genes, does the literature indicate benefit or harm from deletion?",
+            "Q3 (primary): for the 19 target cell populations, does the literature report a change in AD (i.e. are they a valid target for this data)?",
+            "Q4 (dropped): is the 316M classifier more accurate than 104M? Removed from the decision criteria by request; the measurement itself remains on record in a separate document.",
+        ],
+        "q_scope_h": "2.2 What this report does not answer",
+        "q_scope": "Whether the ISP predictions are true in vivo. That requires another modality such as CRISPRi or Perturb-seq "
+                   "and cannot be settled with the data used here. What this report can say is limited to how the two models "
+                   "differ and whether the direction of their shifts is consistent with published biology.",
+        "proc_h": "3.1 The process, in order, and why each step exists",
+        "proc_intro": "The work ran in the following order. Each step depends on the previous one, and changing the order "
+                      "would change the reading.",
+        "proc_items": [
+            "(1) Compare the ISP outputs (rank and sign): measure how much differs, before asking why.",
+            "(2) Separate the causes (precision / cell sampling / model): show that the difference is not noise.",
+            "(3) Filter by expression (detection rate in the target cells): drop genes that cannot carry a signal at all.",
+            "(4) Retrieve the literature (Europe PMC) and machine-verify every PMID: build the primary source record and exclude wrong citations.",
+            "(5) Adjudicate, keeping tier-1 and tier-2 evidence apart: never fill a gap with a guess.",
+            "(6) Sensitivity analysis: show how much the conclusion depends on individual verdicts.",
+            "(7) Generate figures and the report (Japanese and English): make all of the above checkable by a third party.",
+        ],
+        "bound_h": "5.4 Boundaries of the interpretation",
+        "bound_direct": "Directly supported by the measurements: the model gap is not noise (mean difference 84.9% of the "
+                        "signal, 18 of 55 sign flips). Genes well expressed in the target cells still flip in 13 of 44. "
+                        "Among the genes where the literature fixes a direction, 316M agrees in 6 of the 7 contested cases.",
+        "bound_beyond": "Beyond the measurements (offered as a hypothesis): that 316M is biologically the more faithful model. "
+                        "This rests on seven verdicts (six under the C4 criterion) and does not generalise statistically.",
+        "bound_cannot": "Not answerable here: which ISP prediction is correct in vivo; generalisation to other tissues or "
+                        "models; the biological meaning of shifts for lineage markers such as CD8A.",
+        "trace_h": "7. Traceability (question -> process -> result -> interpretation)",
+        "trace_intro": "How each requested question maps onto what was done, what came out and how it is read. Any row whose "
+                       "consistency is not 'matched' states why the answer is partial.",
+        "trace_th": ["Question", "Process", "Result (section)", "Interpretation (section)", "Consistency"],
+        "trace_rows": [
+            ["Q1 qualitative difference, and whether it is noise", "(1)(2)(3)",
+             "4.1 separation of sources (84.9% vs 12.3/17.5%), 4.2 18/55 sign flips",
+             "Model choice drives the conclusion; noise cannot explain it", "matched"],
+            ["Q2 literature direction for the 55 genes", "(4)(5)", "4.4 316M agrees in 6 of the 7 contested genes, 104M in 1",
+             "316M's direction fits the literature better, but not decisively", "partial (7 genes decidable; 6 under C4)"],
+            ["Q3 literature change for the 19 populations", "(3)(4)", "4.7 the 19-population table",
+             "The list does not contradict the literature, but the upstream cap makes count changes untestable", "partial (data constraint stated)"],
+            ["Q4 classifier accuracy comparison", "-", "-", "-", "dropped by request (on record elsewhere)"],
+            ["(added) genes where both models contradict the literature", "(4)(5)", "4.5 seven genes (TNF, IL1B, C1q, S100A8/A9)",
+             "Concentrated in secreted mediators: a systematic weakness of the assay", "added finding (outside the request, bounds the interpretation)"],
+            ["(added) consistency with the team criterion C4 (>=500 cells)", "(3)", "note under 4.6: nine genes fail, TREM2 among them",
+             "The 316M agreement on TREM2 fails C4; recounting gives 5 to 1", "added finding (robustness of the verdicts)"],
+        ],
         "s1": "1. Summary", "s2": "2. Background and objective", "s3": "3. Methods", "s4": "4. Results",
-        "s5": "5. Discussion", "s6": "6. How to reproduce", "s7": "7. References",
-        "s31": "3.1 Data and compute conditions", "s32": "3.2 Separating the three sources of difference",
-        "s33": "3.3 Interpretability filter on expression", "s34": "3.4 Literature search and evidence tiers",
+        "s5": "5. Discussion", "s6": "6. How to reproduce", "s7": "8. References",
+        "s31": "3.2 Data and compute conditions", "s32": "3.3 Separating the three sources of difference",
+        "s33": "3.4 Interpretability filter on expression", "s34": "3.5 Literature search and evidence tiers",
         "s41": "4.1 The model gap is not measurement noise", "s42": "4.2 One gene in three flips sign",
         "s43": "4.3 The candidate list is not stable between models", "s44": "4.4 Literature check: 316M agrees in most contested cases",
         "s45": "4.5 Genes where both models contradict the literature", "s46": "4.6 Shift size tracks expression breadth",
-        "s47": "4.7 Literature check on the cell-population list", "s51": "5.1 What we can say", "s52": "5.2 Limitations",
+        "s47": "4.7 Literature check on the cell-population list", "s51": "5.1 What we can say", "s52": "5.2 Limitations", "s54": "5.4 Boundaries of the interpretation",
         "s53": "5.3 Recommendations",
         "sum_intro": "The question was whether swapping the model from 104M to 316M changes the outcome of gene-deletion "
                      "perturbation qualitatively. The answer is yes, and not through measurement noise: in one gene in three "
@@ -682,13 +782,21 @@ def build(lang: str) -> Document:
     para(doc, L["sum_intro"])
     bullets(doc, [L[k].format(**fmt) for k in ("sum_b1", "sum_b2", "sum_b3", "sum_b4", "sum_b5", "sum_b6")])
 
-    # 2 background
+    # 2 background -> questions -> scope
     h(doc, L["s2"], 1)
     for k in ("bg1", "bg2", "bg3"):
         para(doc, L[k])
+    h(doc, L["q_h"], 2)
+    para(doc, L["q_intro"])
+    bullets(doc, L["q_items"])
+    h(doc, L["q_scope_h"], 2)
+    para(doc, L["q_scope"])
 
-    # 3 methods
+    # 3 methods -> process list first
     h(doc, L["s3"], 1)
+    h(doc, L["proc_h"], 2)
+    para(doc, L["proc_intro"])
+    bullets(doc, L["proc_items"])
     h(doc, L["s31"], 2)
     table(doc, L["m_t_h"], L["m_rows"], widths=[3.6, 12.4], font=9)
     h(doc, L["s32"], 2); para(doc, L["m32"])
@@ -782,6 +890,9 @@ def build(lang: str) -> Document:
     h(doc, L["s51"], 2); bullets(doc, L["d51"])
     h(doc, L["s52"], 2); bullets(doc, L["d52"])
     h(doc, L["s53"], 2); bullets(doc, L["d53"])
+    h(doc, L["s54"], 2)
+    for k in ("bound_direct", "bound_beyond", "bound_cannot"):
+        para(doc, L[k])
 
     # 6 reproduce
     h(doc, L["s6"], 1)
@@ -789,7 +900,11 @@ def build(lang: str) -> Document:
     table(doc, L["s6th"], L["s6rows"], widths=[7.6, 8.4], font=8.5)
     para(doc, L["s6b"], size=9.5)
 
-    # 7 references
+    # 7 traceability (own page so the heading and the table stay together)
+    doc.add_page_break()
+    h(doc, L["trace_h"], 1)
+    para(doc, L["trace_intro"])
+    table(doc, L["trace_th"], L["trace_rows"], widths=[4.2, 1.8, 4.4, 4.4, 3.2], font=8)
     doc.add_page_break()
     h(doc, L["s7"], 1)
     para(doc, L["s7a"], size=9.5)
