@@ -116,7 +116,7 @@ S = {
         "title": "AD_spleen ISP: 104M と 316M の比較（文献照合つき）",
         "sub": "脾臓の免疫細胞 19 細胞型・55 個の遺伝子×3 時点・文献 {n} 件（PMID 検証済み）",
         "h1": "1. 狙い",
-        "aim": "今回の分析で確かめたかったことは2つあります。1つ目は、使うモデルを 104M から 316M に替えると、"
+        "aim": "今回の分析で確かめたかったことは2つあります。1つ目は、使うモデルを V2-104M から V2-316M に替えると、"
                "遺伝子を削除したときの結果が質的に変わるのかどうかです。2つ目は、変わる場合に、"
                "どちらのモデルが示す向きが公表された文献と合っているのかです。この2点だけを調べました。",
         "h2": "2. やったこと",
@@ -133,10 +133,10 @@ S = {
             "突き合わせました。",
         ],
         "h3": "3. 結果",
-        "t1h": ["条件を1つだけ変えた比較", "遺伝子数", "順位相関", "符号が逆になった数", "差の大きさ"],
+        "t1h": ["条件を1つだけ変えた比較", "遺伝子数", "順位相関", "符号が反転した数", "差の大きさ"],
         "t1note": "「差の大きさ」は、条件を変えたときの平均の差を、平均のシフトで割った値（%）です。"
                   "大きいほど、その条件が結果に与える影響が大きいことを意味します。"
-                  "「符号が逆」は、同じ遺伝子について 104M と 316M が正と負で食い違った数を表します。",
+                  "「符号の反転」は、同じ遺伝子について V2-104M と V2-316M が正と負で食い違った数を表します。",
         "res": [
             "同じデータでモデルだけを替えたときの差は、シグナルの 84.9% でした。これは、計算精度だけを替えたときの差"
             "（12.3%）の約7倍、細胞の選び方だけを変えたときの差（17.5%）の約5倍にあたります。"
@@ -171,11 +171,11 @@ S = {
         "h7": "7. 用語（この文書で使うラベル）",
         "terms": [
             ("Shift（Shift_to_goal_end）", "遺伝子を1つ消したとき、細胞の状態が健常（WT）の状態にどれだけ近づいたかを表す値。正 = 近づく（＝その遺伝子は病気を進める側）、負 = 遠ざかる。"),
-            ("符号が逆（反転）", "同じ遺伝子で 104M と 316M の Shift の正負が食い違うこと。順位が動くことより深刻。"),
+            ("符号の反転", "同じ遺伝子で V2-104M と V2-316M の Shift の正負が食い違うこと。順位が動くことより深刻。"),
             ("モデル差・精度差・サンプリング差", "条件を1つだけ変えた比較の呼び名。モデル差 = 104M 対 316M、精度差 = fp32 対 bf16、サンプリング差 = 200 細胞 対 100 細胞。"),
             ("検出率", "標的細胞のうち、その遺伝子を持つ細胞の割合。低いと動かせる細胞が少なく、Shift の意味が薄れる。"),
             ("文献の向き", "その遺伝子を欠失・阻害すると病態が改善するか悪化するか。改善 → Shift 正を期待、悪化 → 負を期待。"),
-            ("C4", "摂動できる細胞数についての項目。目安は 500 個以上だが、これは実測 2 例の間を取った線であり、合否を決める基準ではない。少ない遺伝子は順位を解釈しない。"),
+            ("E4", "摂動できる細胞数についての項目。目安は 500 個以上だが、これは実測 2 例の間を取った線であり、合否を決める基準ではない。少ない遺伝子は順位を解釈しない。"),
             ("文献の証拠の層", "第1層 = 本調査で直接取得して要旨を読んだもの。第2層 = 並列の文献調査の結果を PMID で機械照合したもの。第2層は第1層が黙っている遺伝子にのみ使用。"),
         ],
         "h8": "8. 参考文献",
@@ -185,7 +185,7 @@ S = {
         "cap_t2": "表2　両モデルが争い、文献が向きを示している 7 遺伝子。",
         "cap_f1": "図1　差の正体を分けた結果です。モデルを替えたときの差は、細胞の選び方を変えたときの差の約5倍、"
                    "計算精度を変えたときの差の約7倍あります。",
-        "cap_f2": "図2　2つのモデルで符号が逆になった 7 個の遺伝子です。LYZ だけ値が 1 桁大きいため、"
+        "cap_f2": "図2　2つのモデルで符号が反転した 7 個の遺伝子です。LYZ だけ値が 1 桁大きいため、"
                    "下段は横軸の縮尺を変えています。",
     },
     "en": {
@@ -235,7 +235,7 @@ S = {
             ("Model / precision / sampling gap", "Names for the one-condition-at-a-time comparisons: model = 104M vs 316M, precision = fp32 vs bf16, sampling = 200 vs 100 cells."),
             ("Detection rate", "Share of target cells carrying that gene. Low values mean few cells can be perturbed, so the Shift carries little meaning."),
             ("Literature direction", "Whether deleting or inhibiting the gene improves or worsens the pathology. Improves -> expect a positive Shift; worsens -> expect negative."),
-            ("C4", "The item on how many cells can be perturbed. The 500-cell guide sits between two measured cases and is not a pass/fail criterion. Genes below it are not ranked."),
+            ("E4", "The item on how many cells can be perturbed. The 500-cell guide sits between two measured cases and is not a pass/fail criterion. Genes below it are not ranked."),
             ("Evidence tiers", "Tier 1 = retrieved and read in this study. Tier 2 = a parallel sweep with PMIDs machine-verified. Tier 2 is used only where tier 1 is silent."),
         ],
         "h8": "8. References",
