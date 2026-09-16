@@ -95,9 +95,14 @@ ex = EmbExtractor(
     emb_layer=-1,
     emb_label=LABEL_COLUMNS,
     labels_to_plot=["celltype", "split"],
-    # MPS-measured: bs=8 gives 7.23 ktok/s for V2-316M (bs=16/32 are slower AND
-    # bs=64 aborts the Metal kernel: LM head 20275 x 262144 "too large for kernel").
-    forward_batch_size=8,
+    # 4 is the safe upper bound on every backend:
+    #  - MPS + V2-316M: attention allocates batch*heads*seq^2 elements, which must
+    #    stay under INT_MAX. At seq 4096 that is batch 4 (1.21e9); batch 8 hits
+    #    2.42e9 and aborts with "MPSGraph does not support tensor dims larger
+    #    than INT_MAX" on the first backward.
+    #  - DirectML: batch 8 segfaults on a 43.6 GB shared-memory AMD iGPU.
+    # MPS throughput is unchanged (7.19 ktok/s at 4 vs 7.23 at 8, measured).
+    forward_batch_size=4,
     nproc=8,
     model_version="V2",
 )
