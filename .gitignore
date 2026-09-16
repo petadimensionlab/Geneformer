@@ -82,3 +82,12 @@ analysis/ref
 /result/report_pd_spleen/
 # ISP result aggregation dir (computed/generated artifacts)
 /isp_result/
+
+# --- ISP model comparison / literature check (local only, not for the repo) ---
+# Produced by analysis/16-21_*.py on request. The reports (PDF/DOCX), figures,
+# literature records and derived data stay on this machine; do not commit them.
+/docs/quantization/isp-model-comparison/
+/docs/quantization/expression/
+# analysis/16-21_*.py are committed as TEMPLATES (see the banner in each file).
+# They embed an example verdict table / report prose / search queries; the
+# outputs they produce stay local (see the rules above).
