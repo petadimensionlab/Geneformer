@@ -113,32 +113,41 @@ def cite(*keys: str) -> str:
 # ----------------------------------------------------------------- content
 S = {
     "ja": {
-        "title": "AD_spleen ISP: 104M と 316M の比較（文献照合つき）",
+        "title": "脾臓データ（AD_spleen）の遺伝子削除シミュレーション: V2-104M と V2-316M の比較（文献照合つき）",
         "sub": "脾臓の免疫細胞 19 細胞型・55 個の遺伝子×3 時点・文献 {n} 件（PMID 検証済み）",
         "h1": "1. 狙い",
-        "aim": "今回の分析で確かめたかったことは2つあります。1つ目は、使うモデルを V2-104M から V2-316M に替えると、"
-               "遺伝子を削除したときの結果が質的に変わるのかどうかです。2つ目は、変わる場合に、"
+        "aim": "先に前提を説明します。AD_spleen は脾臓の単一細胞データ（AD と健常の比較）を指します。"
+               "ISP は in silico perturbation の略で、計算機上で遺伝子を1つ削除する解析です。"
+               "V2-104M と V2-316M は Geneformer の事前学習モデルで、数字はパラメータ数（1億400万と3億1600万）を表します。"
+               "fp32 は 32 ビットの浮動小数点、bf16 は bfloat16（16 ビット）の計算精度です。"
+               "確かめたかったことは2つあります。1つ目は、使うモデルを V2-104M から V2-316M に替えると、"
+               "遺伝子を削除したときの結果の向き（改善か悪化か）と順位が変わるのかどうかです。2つ目は、変わる場合に、"
                "どちらのモデルが示す向きが公表された文献と合っているのかです。この2点だけを調べました。",
         "h2": "2. やったこと",
         "did": [
             "同じ細胞、同じ遺伝子、同じ時点で、104M と 316M の結果を突き合わせました"
             "（55 個の遺伝子、3 か月齢・4.5 か月齢・6 か月齢）。",
-            "2つのモデルの差が、計算の丸め誤差によるものか、細胞の選び方によるものか、モデルそのものによるものかを"
-            "切り分けるために、条件を1つずつ変えた比較を行いました。",
+            "差の原因を切り分けるために、数値精度だけを替えた比較と、細胞数だけを替えた比較を行いました。"
+            "モデルを替えた比較では、手元にある実行が数値精度と細胞数も違うため、それらを固定できていません。",
             "対象の細胞でその遺伝子がどのくらい発現しているかを計算し、そもそも削除しても動かせない遺伝子は"
             "判定から外しました。",
-            "遺伝子ごとに Europe PMC で文献を検索し、得られた PMID を1件ずつ引き直して、"
+            "遺伝子ごとに Europe PMC（文献データベース）で文献を検索し、得られた PMID（文献の識別番号）を1件ずつ引き直して、"
             "題名と内容が主張と合っているかを確認しました。",
             "文献が示す向き（削除すると病態が改善するのか、悪化するのか）と、2つのモデルが示した向きを"
             "突き合わせました。",
         ],
         "h3": "3. 結果",
-        "t1h": ["条件を1つだけ変えた比較", "遺伝子数", "順位相関", "符号が反転した数", "差の大きさ"],
+        "t1h": ["変えた条件", "遺伝子数", "順位相関（スピアマン）", "符号が反転した数", "差の大きさ（%）"],
         "t1note": "「差の大きさ」は、条件を変えたときの平均の差を、平均のシフトで割った値（%）です。"
                   "大きいほど、その条件が結果に与える影響が大きいことを意味します。"
-                  "「符号の反転」は、同じ遺伝子について V2-104M と V2-316M が正と負で食い違った数を表します。",
+                  "「順位相関」はスピアマンの順位相関係数で、1.0 に近いほど順位が同じことを表します。"
+                  "「符号が反転した数」は、その行で比べた2つの結果が正と負で食い違った遺伝子の数です。"
+                  "分母は「遺伝子数」の列の値です。"
+                  "1行目と2行目は、比べる条件以外を固定して測りました。"
+                  "3行目は、手元にある V2-104M と V2-316M の実行が数値精度と細胞数も違うため、他の条件を固定できていません。"
+                  "したがって 84.9% はモデル差の上限として読んでください。",
         "res": [
-            "同じデータでモデルだけを替えたときの差は、シグナルの 84.9% でした。これは、計算精度だけを替えたときの差"
+            "モデルを替えたときの差は、シグナルの 84.9% でした（精度と細胞数も同時に違うため、上限の値です）。これは、計算精度だけを替えたときの差"
             "（12.3%）の約7倍、細胞の選び方だけを変えたときの差（17.5%）の約5倍にあたります。"
             "**つまりこの違いは測定のばらつきではなく、モデルの選択が結果を左右しています。**",
             "55 個の遺伝子のうち 18 個（33%）で、2つのモデルが正と負で逆の結論を出しました（符号の反転）。"
@@ -192,22 +201,25 @@ S = {
         "title": "AD_spleen ISP: 104M versus 316M, with the literature check",
         "sub": "19 splenic immune populations / 55 genes x 3 timepoints / {n} references (PMID-verified)",
         "h1": "1. Aim",
-        "aim": "Does replacing the model (104M -> 316M) change the outcome of gene deletion (ISP) qualitatively, and if so, "
+        "aim": "First, the setting. AD_spleen is a single-cell spleen dataset comparing AD with healthy controls, and ISP stands for in silico perturbation: deleting one gene on the computer. V2-104M and V2-316M are pretrained Geneformer models; the numbers are parameter counts (104 million, 316 million). fp32 is 32-bit floating point and bf16 is bfloat16, a 16-bit format. The report asks whether replacing the model (V2-104M -> V2-316M) changes the outcome of gene deletion (direction and ranking), and if so, "
                "which model's direction agrees with the published literature? Nothing else was tested.",
         "h2": "2. What was done",
         "did": [
             "Compared the 104M and 316M outputs on the same cells, genes and timepoints (55 genes, 3/4.5/6 months).",
-            "Split that difference into precision, cell sampling and model by varying one condition at a time.",
+            "Split that difference by running a precision-only comparison and a cell-count-only comparison. In the model comparison the runs in hand differ in precision and cell count as well, so those were not held fixed.",
             "Computed per-gene detection rates in the target cells and dropped genes that cannot move anyway.",
-            "Searched Europe PMC per gene and re-fetched every PMID to verify it.",
+            "Searched Europe PMC, the literature database, for each gene and re-fetched every PMID (the paper identifier) to verify it.",
             "Matched the literature direction (does deletion help or harm) against each model's direction.",
         ],
         "h3": "3. Results",
-        "t1h": ["One condition varied", "Genes", "Rank corr.", "Sign flips", "Size of the gap"],
+        "t1h": ["Condition varied", "Genes", "Rank corr. (Spearman)", "Sign flips", "Size of the gap (%)"],
         "t1note": "Size of the gap = mean |difference| / mean |shift| (%). Larger means that factor matters more. "
-                  "Sign flip = the two models disagree on the sign for the same gene.",
+                  "Rank corr. is Spearman's rank correlation: 1.0 means the two rankings are identical. "
+                  "Sign flips counts the genes where the two results disagree on the sign; the denominator is the value in the Genes column. "
+                  "Rows 1 and 2 hold every other condition fixed. Row 3 does not: the V2-104M and V2-316M runs in hand also differ in "
+                  "precision and cell count, so read 84.9% as an upper bound on the model effect.",
         "res": [
-            "The model gap is 84.9%: about 7x the precision difference (12.3%) and about 5x the cell-sampling "
+            "The model gap is 84.9% (an upper bound: precision and cell count differ too): about 7x the precision difference (12.3%) and about 5x the cell-sampling "
             "difference (17.5%). **This is not noise; the model choice drives the result.**",
             "18 of 55 genes (33%) flip sign. Restricting to well-expressed genes (detected in >=3% of target cells, 44 genes) still leaves 13 flips.",
             "Where the literature fixes a direction, the two models disagree in 7 genes: 316M agrees with the literature in 6, 104M in 1 (LYZ).",
