@@ -102,6 +102,7 @@ input/<TISSUE>/results/isp/<experiment>/
 
 - **[合格基準（解析前に必ず確認）](criteria.md)** — 何をもって成功とするか（C1〜C6）、実行前チェックリスト、実際に起きた失敗の記録
 - **[用語と手法の定義](glossary.md)** — トークン化・埋め込み・`Shift_to_goal_end` の式・ノイズ床・状態分離の意味
+- **[レポート標準構成](report_template.md)** — 背景→目的→問い→プロセス→結果→解釈（目的と方法のズレを点検できる形）
 - [方法・共通設定（詳細）](methods.md)
 - [実行結果のまとめ](results.md)
 - [肝臓（ad_liver）](ad_liver.md)
