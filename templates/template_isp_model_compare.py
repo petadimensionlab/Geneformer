@@ -105,7 +105,7 @@ def main() -> None:
             runs["m316_bf16_canary"], runs["m316_bf16_sub24"], "cell sampling: 316M bf16 200 vs 100 cells"))
     # (3) model contrast
     summary["noise_and_contrasts"].append(compare(
-        runs["m104_fp32_pool"], runs["m316_bf16_canary"], "model: 104M fp32 vs 316M bf16 (200 cells each)"))
+        runs["m104_fp32_pool"], runs["m316_bf16_canary"], "model: 104M fp32 (pooled) vs 316M bf16 (200 cells); dtype and cell count also differ"))
 
     for thr in (0.0, 0.01, 0.03, 0.05, 0.10):
         sub = t[t.detection_AD >= thr]

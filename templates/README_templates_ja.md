@@ -10,7 +10,7 @@ Geneformer の 2 モデル（または 2 条件）の出力を比較し、対象
 
 | テンプレート | 役割 | 主な出力 |
 |---|---|---|
-| `template_expression_by_celltype.py` | 細胞種・病態別の遺伝子検出率（発現の広さ） | `docs/quantization/expression/<TISSUE>.json` |
+| `template_expression_by_celltype.py` | 細胞型ごと、病態ごとの遺伝子検出率（発現の広さ） | `docs/quantization/expression/<TISSUE>.json` |
 | `template_isp_model_compare.py` | 数値精度の差、細胞サンプリングの差、モデルの差を分離し、符号の反転を数える | `isp-model-comparison/{gene_table.csv,summary.json}` |
 | `template_literature_check.py` | Europe PMC 検索（遺伝子ごとの検索式を内蔵） | `isp-model-comparison/literature/*.json` |
 | `template_literature_adjudicate.py` | 文献判定の統合と PMID の機械照合 | `isp-model-comparison/adjudication.{csv,json}` |
