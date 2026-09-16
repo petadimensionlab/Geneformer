@@ -45,7 +45,7 @@
 - [ ] トークン長を切り詰めていないか（切り詰めるなら、細胞型ごとの喪失トークン率を記録する）
 - [ ] `datasets==4.0.0` か（5.x は `perturb_data` がハング）
 - [ ] 長時間の fine-tune は**ステップ単位チェックポイント**を有効にしたか（`patches/checkpoints/`）
-- [ ] bf16 を使うなら `patches/bf16/` を適用済みか（`download.sh` はローカルパッチを上書きする）
+- [ ] **`./patches/apply_patches.sh` を実行したか**（device / bf16 / checkpoints をまとめて適用。`download.sh` はローカルパッチを上書きするため、ダウンロード直後は必ず実行する）
 
 ---
 
