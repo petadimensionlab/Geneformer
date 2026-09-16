@@ -83,12 +83,23 @@ MODEL_TYPE = "CellClassifier"
 
 DISEASE, TISSUE = "PD", "atlas"
 EXPERIMENT = resolve_experiment(DISEASE, TISSUE)
+# The null run for criteria.md E1 reuses this engine, so the experiment label can
+# carry a suffix (IS_EXPERIMENT_SUFFIX=null -> pd_atlas_null). Without it a null
+# run would overwrite the hypothesis run's combined CSV and provenance.
+_SUFFIX = os.environ.get("IS_EXPERIMENT_SUFFIX", "").strip()
+if _SUFFIX:
+    EXPERIMENT = f"{EXPERIMENT}_{_SUFFIX}"
 ISP_DIR = isp_dir_for(ROOT, EXPERIMENT)
 OUT_CSV = ISP_DIR / f"{EXPERIMENT}_early_isp_stats_combined.csv"
 
 POOLS = [p.strip() for p in os.environ.get("IS_POOLS", "DMNX_Neu,GPI_Neu").split(",") if p.strip()]
 
-HYPOTHESIS_GENES = [
+# The gene list can be swapped without editing this file (IS_GENES=A,B,C). That is
+# how the null distribution is produced: same engine, same conditions, genes
+# chosen to be unrelated to PD (see docs/isp/pd_atlas.md for the candidate list
+# and the presence fractions that decided the final set).
+_GENES_ENV = [g.strip() for g in os.environ.get("IS_GENES", "").split(",") if g.strip()]
+_GENES_DEFAULT = [
     # alpha-synuclein / monogenic PD
     "SNCA", "LRRK2", "GBA1", "PRKN", "PINK1", "PARK7", "VPS35", "ATP13A2",
     "MAPT", "TMEM175", "GCH1", "DNAJC13", "RAB39B", "CHCHD2", "FBXO7",
@@ -102,6 +113,7 @@ HYPOTHESIS_GENES = [
     "TREM2", "TYROBP", "C1QA", "C1QB", "CD68", "CX3CR1", "ITGAM", "ITGAX",
     "IL6", "TNF", "CCL2", "CXCL10", "HLA-DRA", "S100A8", "S100A9", "LYZ", "CSF1R",
 ]
+HYPOTHESIS_GENES = _GENES_ENV if _GENES_ENV else _GENES_DEFAULT
 
 MAX_CELLS = int(os.environ.get("IS_MAX_CELLS", "300"))
 EMB_CELLS = int(os.environ.get("IS_EMB_CELLS", "1000"))
