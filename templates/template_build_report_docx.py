@@ -114,9 +114,9 @@ def cite(*keys: str) -> str:
 S = {
     "ja": {
         "title": "AD_spleen ISP: 104M と 316M の比較（文献照合つき）",
-        "sub": "脾臓免疫細胞 19 集団・55 遺伝子×3 時点・文献 {n} 件（PMID 検証済み）",
+        "sub": "脾臓の免疫細胞 19 細胞型・55 個の遺伝子×3 時点・文献 {n} 件（PMID 検証済み）",
         "h1": "1. 狙い",
-        "aim": "今回の分析で確かめたかったことは2つあります。1つ目は、使うモデルを 104M から 316M に替えると、"
+        "aim": "今回の分析で確かめたかったことは2つあります。1つ目は、使うモデルを V2-104M から V2-316M に替えると、"
                "遺伝子を削除したときの結果が質的に変わるのかどうかです。2つ目は、変わる場合に、"
                "どちらのモデルが示す向きが公表された文献と合っているのかです。この2点だけを調べました。",
         "h2": "2. やったこと",
@@ -133,15 +133,15 @@ S = {
             "突き合わせました。",
         ],
         "h3": "3. 結果",
-        "t1h": ["条件を1つだけ変えた比較", "遺伝子数", "順位相関", "符号が逆になった数", "差の大きさ"],
+        "t1h": ["条件を1つだけ変えた比較", "遺伝子数", "順位相関", "符号が反転した数", "差の大きさ"],
         "t1note": "「差の大きさ」は、条件を変えたときの平均の差を、平均のシフトで割った値（%）です。"
                   "大きいほど、その条件が結果に与える影響が大きいことを意味します。"
-                  "「符号が逆」は、同じ遺伝子について 104M と 316M が正と負で食い違った数を表します。",
+                  "「符号の反転」は、同じ遺伝子について V2-104M と V2-316M が正と負で食い違った数を表します。",
         "res": [
             "同じデータでモデルだけを替えたときの差は、シグナルの 84.9% でした。これは、計算精度だけを替えたときの差"
             "（12.3%）の約7倍、細胞の選び方だけを変えたときの差（17.5%）の約5倍にあたります。"
             "**つまりこの違いは測定のばらつきではなく、モデルの選択が結果を左右しています。**",
-            "55 個の遺伝子のうち 18 個（33%）で、2つのモデルが正と負で逆の結論を出しました。"
+            "55 個の遺伝子のうち 18 個（33%）で、2つのモデルが正と負で逆の結論を出しました（符号の反転）。"
             "対象の細胞でよく発現している遺伝子（検出率 3% 以上、44 個）だけに絞っても、13 個で逆のままでした。",
             "文献が向きを決められる遺伝子のうち、2つのモデルが争っているのは 7 個でした。"
             "この 7 個では、316M が文献と一致したのが 6 個、104M が一致したのが 1 個（LYZ）でした。",
@@ -165,17 +165,17 @@ S = {
             "片方のモデルだけに出た候補は、モデルを替えると入れ替わります。",
             "**系統マーカー（CD8A など）は候補から外してください。** これらを削除すると、細胞の種類そのものが"
             "崩れる方向に結果が動くため、治療の標的として読むことはできません。",
-            "**発現が少ない遺伝子の順位は解釈しないでください。** 削除できる細胞が 500 個に満たない遺伝子が 9 個あり"
-            "（TREM2、SPP1、CCL2 など）、チームが決めた合格基準 C4 では不合格になります。",
+            "**発現が少ない遺伝子の順位は解釈しないでください。** 摂動できる細胞が 500 個に満たない遺伝子が 9 個ありました"
+            "（TREM2、SPP1、CCL2 など。TREM2 は 176 個）。値が安定しないため、これらの順位は結果として扱いません。",
         ],
         "h7": "7. 用語（この文書で使うラベル）",
         "terms": [
             ("Shift（Shift_to_goal_end）", "遺伝子を1つ消したとき、細胞の状態が健常（WT）の状態にどれだけ近づいたかを表す値。正 = 近づく（＝その遺伝子は病気を進める側）、負 = 遠ざかる。"),
-            ("符号が逆（反転）", "同じ遺伝子で 104M と 316M の Shift の正負が食い違うこと。順位が動くことより深刻。"),
+            ("符号の反転", "同じ遺伝子で V2-104M と V2-316M の Shift の正負が食い違うこと。順位が動くことより深刻。"),
             ("モデル差・精度差・サンプリング差", "条件を1つだけ変えた比較の呼び名。モデル差 = 104M 対 316M、精度差 = fp32 対 bf16、サンプリング差 = 200 細胞 対 100 細胞。"),
             ("検出率", "標的細胞のうち、その遺伝子を持つ細胞の割合。低いと動かせる細胞が少なく、Shift の意味が薄れる。"),
             ("文献の向き", "その遺伝子を欠失・阻害すると病態が改善するか悪化するか。改善 → Shift 正を期待、悪化 → 負を期待。"),
-            ("C4", "チームが事前に定めた合格基準の1つ。摂動できる細胞が 500 以上であること。未達の結果は解釈しない。"),
+            ("E4", "摂動できる細胞数についての項目。目安は 500 個以上だが、これは実測 2 例の間を取った線であり、合否を決める基準ではない。少ない遺伝子は順位を解釈しない。"),
             ("文献の証拠の層", "第1層 = 本調査で直接取得して要旨を読んだもの。第2層 = 並列の文献調査の結果を PMID で機械照合したもの。第2層は第1層が黙っている遺伝子にのみ使用。"),
         ],
         "h8": "8. 参考文献",
@@ -185,7 +185,7 @@ S = {
         "cap_t2": "表2　両モデルが争い、文献が向きを示している 7 遺伝子。",
         "cap_f1": "図1　差の正体を分けた結果です。モデルを替えたときの差は、細胞の選び方を変えたときの差の約5倍、"
                    "計算精度を変えたときの差の約7倍あります。",
-        "cap_f2": "図2　2つのモデルで符号が逆になった 7 個の遺伝子です。LYZ だけ値が 1 桁大きいため、"
+        "cap_f2": "図2　2つのモデルで符号が反転した 7 個の遺伝子です。LYZ だけ値が 1 桁大きいため、"
                    "下段は横軸の縮尺を変えています。",
     },
     "en": {
@@ -226,7 +226,7 @@ S = {
             "**316M fits the literature better** (7 to 1), but only seven genes could be adjudicated, so this is not proof that 316M is correct.",
             "**Report as candidates only genes whose direction agrees across both models.** Single-model candidates move with the model choice.",
             "**Exclude lineage markers (CD8A and similar).** Deleting them displaces the cell's identity, which cannot be read as a therapeutic effect.",
-            "**Do not interpret ranks of barely expressed genes.** Nine genes can be perturbed in fewer than 500 cells (TREM2, SPP1, CCL2 and others), which fails the team's C4 criterion.",
+            "**Do not interpret ranks of barely expressed genes.** Nine genes can be perturbed in fewer than 500 cells (TREM2 has 176, SPP1 has 31, CCL2 has 13). Their ranks are not treated as results because the values are unstable.",
         ],
         "h7": "7. Terms used in this document",
         "terms": [
@@ -235,7 +235,7 @@ S = {
             ("Model / precision / sampling gap", "Names for the one-condition-at-a-time comparisons: model = 104M vs 316M, precision = fp32 vs bf16, sampling = 200 vs 100 cells."),
             ("Detection rate", "Share of target cells carrying that gene. Low values mean few cells can be perturbed, so the Shift carries little meaning."),
             ("Literature direction", "Whether deleting or inhibiting the gene improves or worsens the pathology. Improves -> expect a positive Shift; worsens -> expect negative."),
-            ("C4", "One of the team's pre-agreed pass criteria: at least 500 perturbable cells. Results below it are not interpreted."),
+            ("E4", "The item on how many cells can be perturbed. The 500-cell guide sits between two measured cases and is not a pass/fail criterion. Genes below it are not ranked."),
             ("Evidence tiers", "Tier 1 = retrieved and read in this study. Tier 2 = a parallel sweep with PMIDs machine-verified. Tier 2 is used only where tier 1 is silent."),
         ],
         "h8": "8. References",

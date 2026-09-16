@@ -51,7 +51,7 @@ IS_TIMEPOINTS=3m IS_MAX_GENES=3 \
 ## レポート生成
 
 結果の可視化・HTML レポート・officecli 用 PPT プロンプトは `result/report/` にあります
-（各 build / render / visualize スクリプト）。詳細は [README のセクション](../README.md) を参照。
+（各 build、render、visualize スクリプト）。一覧は[リポジトリの README](../../README.md) にあります。
 
 文章としてのレポート（DOCX、日本語と英語）が必要な場合は、`templates/` の雛形を使います。
 
