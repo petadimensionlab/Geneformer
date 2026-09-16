@@ -24,9 +24,15 @@
 | `ad_spleen` | AD | 脾臓（免疫） | `07_ad_spleen_early_isp.py` | Fine-tuned CellClassifier | PC-B |
 | `ad_ln` | AD | リンパ節（CD4+ T テスト） | `07_ad_ln_early_isp.py` | Fine-tuned CellClassifier | ローカル |
 | `pd_spleen` | PD | 脾臓（免疫） | `07_pd_spleen_early_isp.py` | **Fine-tuned** CellClassifier | PC-C |
+| `pd_atlas` | PD | **脳 5 領域**（DMNX/GPI/PMC/PFC/PVC） | `07g_pd_atlas_perturbation.py` | Fine-tuned CellClassifier（**部分 epoch 31%**） | macminim4pro（M4 Pro, 64 GiB） |
 
 > **PD の完成度は AD より低い**（データ=脾臓のみ）。PD_spleen は 2026-08-26 に fine-tune 完了（acc 0.915）+ ISP 再実行済み。
 > 詳細は **[PD の現状・残タスク（pd_spleen）](pd.md)** を参照。
+>
+> **`pd_atlas` は別系統**: 公開ヒト snRNA-seq アトラス（Prashant et al. 2024, *Sci Data*、
+> 2,096,155 nuclei / 97 ドナー / 5 領域）を入力にした PD 脳解析。標準の PD_spleen とは
+> データもスクリプトも異なります。**ISP は GPI_Neu 実行中、fine-tune は部分 epoch（31%）** —
+> 数値を引用する前に留保を確認してください: **[PD multi-region atlas（pd_atlas）](pd_atlas.md)**
 | `ad_liver` | AD | 肝臓 | `07e_ad_liver_perturbation.py` | Fine-tuned CellClassifier | PC-C |
 | `ad_bm` | AD | 骨髄 | `07f_in_silico_perturbation_AD_BM.py` | Fine-tuned CellClassifier | PC-C |
 
