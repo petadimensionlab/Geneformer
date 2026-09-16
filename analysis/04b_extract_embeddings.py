@@ -20,6 +20,11 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _resolve_tissue import find_h5ad, resolve
+from _isp_common import apply_dtype_override
+
+# GF_DTYPE=bf16: EmbExtractor loads through perturber_utils.load_model (line 678 of
+# emb_extractor.py), so the same hook ISP uses applies here. No-op when GF_DTYPE is unset.
+apply_dtype_override()
 
 os.environ["WANDB_DISABLED"] = "true"
 
@@ -90,7 +95,9 @@ ex = EmbExtractor(
     emb_layer=-1,
     emb_label=LABEL_COLUMNS,
     labels_to_plot=["celltype", "split"],
-    forward_batch_size=32,
+    # MPS-measured: bs=8 gives 7.23 ktok/s for V2-316M (bs=16/32 are slower AND
+    # bs=64 aborts the Metal kernel: LM head 20275 x 262144 "too large for kernel").
+    forward_batch_size=8,
     nproc=8,
     model_version="V2",
 )

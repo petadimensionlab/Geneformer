@@ -110,7 +110,12 @@ Apple Silicon 上でエンドツーエンド実行:
      `GF_DTYPE=bf16` の ISP が `TypeError: Got unsupported ScalarType BFloat16` で落ちました）。
      `./download.sh` の後は必ず再適用してください:
      `cp patches/bf16/emb_extractor.py patches/bf16/perturber_utils.py
-     patches/checkpoints/classifier.py geneformer_hf/geneformer/`。
+     patches/checkpoints/classifier.py patches/device/evaluation_utils.py
+     patches/device/in_silico_perturber.py geneformer_hf/geneformer/`。
+     （`patches/device/` は CUDA 直書きの漏れ 6 箇所の修正。当てないと **fine-tune の
+     評価と ISP が `AssertionError: Torch not compiled with CUDA enabled` で落ちます** —
+     学習は完走するのに指標が一切書かれないので気づきにくい。詳細は
+     [`patches/device/README.md`](patches/device/README.md)）
 4. **In silico perturbation**(`analysis/07_in_silico_perturbation.py`、チュートリアル
    ノートブック移植)— MPS で**動作**。
 

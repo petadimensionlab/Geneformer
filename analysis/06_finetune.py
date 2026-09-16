@@ -102,6 +102,20 @@ USE_BF16 = os.environ.get("FINETUNE_BF16", "").strip().lower() in ("1", "true", 
 if USE_BF16:
     print("[config] bf16 autocast enabled", flush=True)
 
+# Activation memory scales with the batch size; on a 64 GB host (M4 Pro) the
+# ~64 GiB peak measured at batch 8 + gradient checkpointing is the entire budget.
+# Measured here: batch 4 still swapped (14 GB swap fully used, step time drifting
+# 25 s -> 500 s), so batch 2 is the safe default on this machine.
+FINETUNE_BATCH_SIZE = int(os.environ.get("FINETUNE_BATCH_SIZE", "2"))
+print(f"[config] per_device_train_batch_size={FINETUNE_BATCH_SIZE}", flush=True)
+
+# Cap the optimizer steps. A full epoch over the PD_atlas train split is ~960
+# steps at batch 4; FINETUNE_MAX_STEPS>0 truncates it so a usable classifier can
+# be produced inside a sane wall-clock budget on this host.
+FINETUNE_MAX_STEPS = int(os.environ.get("FINETUNE_MAX_STEPS", "0"))
+if FINETUNE_MAX_STEPS > 0:
+    print(f"[config] max_steps={FINETUNE_MAX_STEPS}", flush=True)
+
 # ------------------------------------------------------------------ classifier
 from geneformer import Classifier
 
@@ -117,25 +131,36 @@ classifier = Classifier(
         # padded length of 4096 tokens peaks at ~145 GiB WITHOUT gradient
         # checkpointing (-> MPS OOM), but only ~64 GiB WITH it. Keep batch 8
         # and checkpoint instead of shrinking the effective batch.
-        "per_device_train_batch_size": 8,
-        "per_device_eval_batch_size": 16,
+        # On a 64 GB machine (M4 Pro) ~64 GiB is the whole budget, so the batch
+        # size is overridable: FINETUNE_BATCH_SIZE=4 halves the activation peak.
+        "per_device_train_batch_size": FINETUNE_BATCH_SIZE,
+        "per_device_eval_batch_size": FINETUNE_BATCH_SIZE * 2,
         "gradient_checkpointing": True,
         "gradient_checkpointing_kwargs": {"use_reentrant": False},
         "seed": SEED,
         # Periodic step checkpoints so an interrupted run (OOM/crash/power)
         # resumes instead of losing the whole epoch. Override with
         # FINETUNE_SAVE_STEPS.
+        # NOTE: the stock classifier hardcodes save_strategy="epoch" through
+        # def_training_args.update(); patches/checkpoints/classifier.py switches
+        # that to setdefault, which is what makes these lines take effect.
         "save_strategy": "steps",
         "save_steps": int(os.environ.get("FINETUNE_SAVE_STEPS", "200")),
         "save_total_limit": 2,
         "logging_steps": 100,
         "report_to": "none",
+        # max_steps ends the single epoch at the cap. The in-training eval over
+        # the ~3,800-cell eval cohort is skipped when a cap is set; the real
+        # held-out evaluation runs afterwards via evaluate_saved_model().
+        **({"max_steps": FINETUNE_MAX_STEPS,
+            "evaluation_strategy": "no",
+            "load_best_model_at_end": False} if FINETUNE_MAX_STEPS > 0 else {}),
         **({"bf16": True} if USE_BF16 else {}),
     },
     max_ncells=None,
     freeze_layers=6,
     num_crossval_splits=1,
-    forward_batch_size=32,
+    forward_batch_size=8,
     nproc=8,
     model_version="V2",
 )
@@ -259,13 +284,29 @@ comparison = pd.DataFrame([
 comparison.to_csv(TABLE_DIR / "adpd_model_comparison.csv", index=False)
 print(comparison.round(4).to_string(index=False), flush=True)
 
+# Record the ACTUAL training regime. A truncated run (FINETUNE_MAX_STEPS>0) is a
+# PARTIAL epoch and must never be reported as "1 epoch": that would hide a
+# parameter choice that directly affects accuracy.
+if FINETUNE_MAX_STEPS > 0:
+    print(f"[WARN] TRAINING TRUNCATED: max_steps={FINETUNE_MAX_STEPS} is a partial "
+          "epoch -- accuracy may be below a full-epoch run. Report this with the numbers.",
+          flush=True)
+
 (TABLE_DIR / "adpd_finetuned_summary.json").write_text(json.dumps({
     "dataset": f"{PREFIX} (mouse -> human ortholog mapped)",
-    "method": "fine-tuned Geneformer V2-104M cell classifier",
-    "epochs": 1, "learning_rate": 5e-5, "freeze_layers": 6,
+    "method": f"fine-tuned {MODEL_NAME} cell classifier",
+    "model_name": MODEL_NAME,
+    "learning_rate": 5e-5, "freeze_layers": 6,
+    "per_device_train_batch_size": FINETUNE_BATCH_SIZE,
+    "bf16_autocast": bool(USE_BF16),
+    "gradient_checkpointing": True,
+    "num_train_epochs_requested": 1,
+    "max_steps_cap": (FINETUNE_MAX_STEPS or None),
+    "training_truncated": bool(FINETUNE_MAX_STEPS > 0),
     "n_train_samples": len(TRAIN), "n_eval_samples": len(EVAL), "n_test_samples": len(TEST),
     "n_test_cells": int(len(y_true)), "n_classes": len(CLASSES),
     "accuracy": float(acc), "macro_f1": float(mf1),
+    "baseline_accuracy": baseline["accuracy"], "baseline_macro_f1": baseline["macro_f1"],
     "checkpoint": str(TRAINED),
 }, indent=2))
 print("=== DONE ===", flush=True)

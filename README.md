@@ -118,7 +118,12 @@ Fix applied in `06_finetune.py`: keep
      `TypeError: Got unsupported ScalarType BFloat16`). Re-apply after every
      `./download.sh`:
      `cp patches/bf16/emb_extractor.py patches/bf16/perturber_utils.py
-     patches/checkpoints/classifier.py geneformer_hf/geneformer/`.
+     patches/checkpoints/classifier.py patches/device/evaluation_utils.py
+     patches/device/in_silico_perturber.py geneformer_hf/geneformer/`.
+     (`patches/device/` fixes 6 missed CUDA hard-codes; without it the fine-tune
+     evaluation and the ISP die with `AssertionError: Torch not compiled with CUDA
+     enabled` -- training completes but no metrics are written. See
+     [`patches/device/README.md`](patches/device/README.md).)
 4. **In silico perturbation** (`analysis/07_in_silico_perturbation.py`, ported
    from the tutorial notebook) — **works** on MPS.
 
