@@ -185,13 +185,29 @@ checkpoints = sorted(RUN_DIR.glob(f"*geneformer_cellClassifier_{RUN_PREFIX}/kspl
 
 
 def _valid_checkpoint(path) -> bool:
-    """A checkpoint is reusable only if it actually holds saved model weights."""
+    """A checkpoint dir is reusable if it holds weights directly, OR holds
+    step checkpoints (``checkpoint-<N>/``) that do.
+
+    With ``save_strategy="steps"`` (the new default) an interrupted run leaves
+    its weights only inside ``checkpoint-<N>/`` subdirectories, so checking the
+    top level alone would classify such a run as incomplete and DELETE hours of
+    training. Never delete a directory that contains resumable step
+    checkpoints.
+    """
     if not path.is_dir():
         return False
-    return any(
+    if any(
         path.joinpath(name).exists()
         for name in ("pytorch_model.bin", "model.safetensors", "adapter_model.bin")
-    )
+    ):
+        return True
+    for sub in path.glob("checkpoint-*"):
+        if any(
+            sub.joinpath(name).exists()
+            for name in ("pytorch_model.bin", "model.safetensors", "adapter_model.bin")
+        ):
+            return True
+    return False
 
 
 # Drop checkpoint dirs that are empty/incomplete so training re-runs fresh.
