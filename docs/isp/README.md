@@ -23,18 +23,20 @@
 | `ad_blood` | AD | 血液（末梢免疫） | `07_ad_blood_early_isp.py` | Fine-tuned CellClassifier | PC-B |
 | `ad_spleen` | AD | 脾臓（免疫） | `07_ad_spleen_early_isp.py` | Fine-tuned CellClassifier | PC-B |
 | `ad_ln` | AD | リンパ節（CD4+ T テスト） | `07_ad_ln_early_isp.py` | Fine-tuned CellClassifier | ローカル |
-| `pd_spleen` | PD | 脾臓（免疫） | `07_pd_spleen_early_isp.py` | **Fine-tuned** CellClassifier | PC-C |
-| `pd_atlas` | PD | **脳 5 領域**（DMNX/GPI/PMC/PFC/PVC） | `07g_pd_atlas_perturbation.py` | Fine-tuned CellClassifier（**部分 epoch 31%**） | macminim4pro（M4 Pro, 64 GiB） |
+| `pd_spleen` | PD | 脾臓（免疫） | `07_pd_spleen_early_isp.py` | 微調整済み CellClassifier | PC-C |
+| `ad_liver` | AD | 肝臓 | `07e_ad_liver_perturbation.py` | 微調整済み CellClassifier | PC-C |
+| `ad_bm` | AD | 骨髄 | `07f_in_silico_perturbation_AD_BM.py` | 微調整済み CellClassifier | PC-C |
+| `pd_atlas` | PD | **脳 5 領域**（DMNX/GPI/PMC/PFC/PVC） | `07g_pd_atlas_perturbation.py` | 微調整済み CellClassifier（**部分エポック 31%**） | macminim4pro（M4 Pro, 64 GiB） |
 
-> **PD の完成度は AD より低い**（データ=脾臓のみ）。PD_spleen は 2026-08-26 に fine-tune 完了（acc 0.915）+ ISP 再実行済み。
+> **PD の完成度は AD より低い**（pd_spleen は脾臓のみ）。pd_spleen は 2026-08-26 に微調整が完了
+> （accuracy 0.915）し、ISP を再実行済みです。
 > 詳細は **[PD の現状・残タスク（pd_spleen）](pd.md)** を参照。
 >
 > **`pd_atlas` は別系統**: 公開ヒト snRNA-seq アトラス（Prashant et al. 2024, *Sci Data*、
-> 2,096,155 nuclei / 97 ドナー / 5 領域）を入力にした PD 脳解析。標準の PD_spleen とは
-> データもスクリプトも異なります。**ISP は GPI_Neu 実行中、fine-tune は部分 epoch（31%）** —
-> 数値を引用する前に留保を確認してください: **[PD multi-region atlas（pd_atlas）](pd_atlas.md)**
-| `ad_liver` | AD | 肝臓 | `07e_ad_liver_perturbation.py` | Fine-tuned CellClassifier | PC-C |
-| `ad_bm` | AD | 骨髄 | `07f_in_silico_perturbation_AD_BM.py` | Fine-tuned CellClassifier | PC-C |
+> 2,096,155 nuclei / 97 ドナー / 5 領域）を入力にした PD 脳解析です。標準の pd_spleen とは
+> データもスクリプトも異なります。**ISP は完了、微調整は部分エポック（31%）** —
+> 数値を引用する前に「言えないこと」を確認してください:
+> **[PD 多領域アトラスの ISP 実施記録（pd_atlas）](pd_atlas.md)**
 
 > **AD_LN（リンパ節）**: `07_ad_ln_early_isp.py` は CD4+ T 細胞の小規模テスト（CD28/STAT3/FOXP3）。
 > `input/AD_LN` の h5ad/tokenized/fine-tune モデルは未配置（スクリプトのみ）のため、実行にはデータの配置が必要。
