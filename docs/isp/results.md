@@ -9,13 +9,13 @@
 
 | 実験 | 疾患 | 臓器 | 遺伝子数 | タイムポイント | モデル | 実行時間(目安) |
 |---|---|---|---|---|---|---|
-| ad_smallint | AD | 小腸 | 49 | early(3-6m pooled) | Fine-tuned | ~45分 |
-| ad_brain | AD | 脳(ミクログリア) | 23 | early(3-6m pooled) | Fine-tuned | ~67分 |
-| ad_blood | AD | 血液 | 55 | 3m/4.5m/6m/9m/12m | Fine-tuned | ~1h35m |
-| ad_spleen | AD | 脾臓 | 55 | 3m/4.5m/6m | Fine-tuned | ~50分 |
-| pd_spleen | PD | 脾臓 | 34 | 6m/9m/12m | **Fine-tuned** | ~1h(finetune)+ISP |
-| ad_liver | AD | 肝臓 | 21 | 3m→後期 | Fine-tuned | - |
-| ad_bm | AD | 骨髄 | 11 | AD→WT | Fine-tuned | - |
+| ad_smallint | AD | 小腸 | 49 | early(3-6m pooled) | 微調整済み | ~45分 |
+| ad_brain | AD | 脳(ミクログリア) | 23 | early(3-6m pooled) | 微調整済み | ~67分 |
+| ad_blood | AD | 血液 | 55 | 3m/4.5m/6m/9m/12m | 微調整済み | ~1h35m |
+| ad_spleen | AD | 脾臓 | 55 | 3m/4.5m/6m | 微調整済み | ~50分 |
+| pd_spleen | PD | 脾臓 | 34 | 6m/9m/12m | **微調整済み** | ~1h(finetune)+ISP |
+| ad_liver | AD | 肝臓 | 21 | 3m→後期 | 微調整済み | - |
+| ad_bm | AD | 骨髄 | 11 | AD→WT | 微調整済み | - |
 
 > 実測値（Shift_to_goal_end）はローカル成果物のため数値は下表のとおり（生成時点）。最新値は各 `*_combined.csv` を参照。
 
@@ -93,7 +93,7 @@
 
 ## PD（パーキンソン病）
 
-### 脾臓 `pd_spleen`（免疫）— **Fine-tuned CellClassifier（2026-08-26 再実行）**
+### 脾臓 `pd_spleen`（免疫）— **微調整済み CellClassifier（2026-08-26 再実行）**
 
 | Gene | 6m Shift |
 |---|---|
@@ -109,7 +109,7 @@
 
 **解釈**: PD 脾臓では **S100A8/S100A9（警報因子）** と **LYZ（ライソザイム）** が最有力。α-synuclein 注入（PFF）モデルで、神経炎症の末梢プロキシ。SNCA 自体も正（+0.0015）で、α-syn 軸が脾臓免疫の疾病状態に関与。
 
-> **2026-08-26 更新**: `06_finetune.py` で fine-tune 完了（accuracy 0.9149 / macro F1 0.9079）後、`07_pd_spleen_early_isp.py` を **Pretrained → CellClassifier** に変更して再実行。S100A8/S100A9 は Pretrained 時（+0.0009/+0.0006）から大幅に増強（+0.036/+0.022）。Pretrained 時の FOXP3/C1QB/CD14 上位は fine-tuned ではランク外（モデル差）。詳細は **[pd.md](pd.md)** を参照。
+> **2026-08-26 更新**: `06_finetune.py` で微調整が完了（accuracy 0.9149 / macro F1 0.9079）後、`07_pd_spleen_early_isp.py` を **Pretrained → CellClassifier** に変更して再実行。S100A8/S100A9 は Pretrained 時（+0.0009/+0.0006）から大幅に増強（+0.036/+0.022）。Pretrained 時の FOXP3/C1QB/CD14 上位は微調整後ではランク外（モデル差）。詳細は **[pd.md](pd.md)** を参照。
 
 ---
 

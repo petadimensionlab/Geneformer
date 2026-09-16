@@ -1,10 +1,10 @@
 # PD multi-region atlas（`pd_atlas`）— ISP 実施記録
 
-> **状態（2026-09-16 完了）**: データ取得・トークナイズ・埋め込み・ベースライン・fine-tune・
+> **状態（2026-09-16 完了）**: データ取得・トークナイズ・埋め込み・ベースライン・微調整・
 > **ISP（DMNX_Neu 16 / GPI_Neu 15 遺伝子）まで完走**。
 > **ただし本実行から遺伝子を結論として引用しないでください** — §6.3 のとおり 2 領域間で
 > 順位が再現せず（Spearman ρ = +0.165, p = 0.573）、§7 の留保が全て残っています。
-> fine-tune は **部分 epoch（31%）** です。
+> 微調整は **部分 epoch（31%）** です。
 
 `docs/isp/pd.md`（PD_spleen 単一臓器）とは別系統です。こちらは
 **公開ヒト snRNA-seq アトラス（5 領域・97 ドナー）** を入力にした初の PD 解析です。
@@ -53,7 +53,7 @@ torch 2.14.0, **transformers 4.46.3**, **datasets 4.0.0**）。
 cd ~/workspace/research/Geneformer
 # 入力 h5ad（CELLxGENE 30GB → 11,323 細胞のパイプライン形式）
 #   input/PD_atlas/h5ad/PD_atlas.h5ad   obs: cell_id, individual, celltype, split
-bash analysis/run_pd_atlas_pipeline.sh      # tokenize → embed → baseline → fine-tune → ISP
+bash analysis/run_pd_atlas_pipeline.sh      # tokenize → embed → baseline → 微調整 → ISP
 ```
 
 | 段階 | 実測 |
@@ -61,10 +61,10 @@ bash analysis/run_pd_atlas_pipeline.sh      # tokenize → embed → baseline �
 | トークナイズ | 11,323 細胞、median 2,767 tokens（max 4,096）、557 MiB |
 | 凍結埋め込み抽出 | 11,323 × 1152、**1 時間 10 分**（bf16, `forward_batch_size=4`） |
 | ベースライン probe | 数分（埋め込みを再利用） |
-| fine-tune（600 ステップ） | `train_runtime` **2 時間 2 分**（batch 2 + gradient checkpointing） |
+| 微調整（600 ステップ） | `train_runtime` **2 時間 2 分**（batch 2 + gradient checkpointing） |
 | ISP | DMNX_Neu 16 遺伝子 ≈ 80 分 / GPI_Neu 15 遺伝子 実行中 |
 
-## 4. fine-tune — **部分 epoch（31%）であることの明示**
+## 4. 微調整 — **部分 epoch（31%）であることの明示**
 
 | 項目 | 値 |
 |---|---|
@@ -191,10 +191,10 @@ PD の知見として報告することはできないため、§7 の留保が�
 2. **絶対値が小さい。** DMNX_Neu の `Shift` は最大 2.1e-3 で、リポジトリが bf16 の
    ノイズフロアとして挙げる **|Shift| ≈ 2e-4** の 10 倍程度にすぎません
    （GPI_Neu は最大 7.0e-4 ＝ 3.5 倍）。**単独では生物学的結論を出せません。**
-3. **有意性検定は未実施。** 順位を主張するには
+3. **有意性検定は未検証。** 順位を主張するには
    `analysis/07d_in_silico_perturbation_PD_null.py` 相当の**並べ替え null 比較**が必要です。
 4. **分類器の偏り（§5）。** ISP の 2 プールは分類器が最も苦手なクラスであり、
-   GPI_Neu の recall は 0.663 です。さらに **fine-tune は 31% epoch** です。
+   GPI_Neu の recall は 0.663 です。さらに **微調整は 31% epoch** です。
 5. **プール間で全体の向きすら違う。** DMNX_Neu は 13/16 が正（平均 +6.6e-4）、
    GPI_Neu は 7/15 が正（平均 −1.8e-4）。「PD → 健常」方向の移動量が領域で
    一貫していません。
@@ -217,8 +217,8 @@ ISP は完走しましたが §7 の留保が残るため、**遺伝子順位を
 
 | 症状 | 原因と対処 |
 |---|---|
-| `AssertionError: Torch not compiled with CUDA enabled`（fine-tune 評価と ISP） | `patches/geneformer_multibackend.patch` が `evaluation_utils.py` / `in_silico_perturber.py` の CUDA 直書き 6 箇所を漏らしていた → **`patches/device/`** に修正を追加（学習は完走するのに指標が書かれないため発見が遅れる） |
-| fine-tune が 164 秒/ステップまで劣化 | batch 4 でスワップ枯渇 → **batch 2** + gradient checkpointing |
+| `AssertionError: Torch not compiled with CUDA enabled`（微調整の評価と ISP） | `patches/geneformer_multibackend.patch` が `evaluation_utils.py` / `in_silico_perturber.py` の CUDA 直書き 6 箇所を漏らしていた → **`patches/device/`** に修正を追加（学習は完走するのに指標が書かれないため発見が遅れる） |
+| 微調整が 164 秒/ステップまで劣化 | batch 4 でスワップ枯渇 → **batch 2** + gradient checkpointing |
 | Metal カーネル abort | `batch × heads × seq²` が INT_MAX 超過 → **`forward_batch_size=4`**（MPS + 316M） |
 | `TypeError: Got unsupported ScalarType BFloat16` | bf16 埋め出しの numpy 変換 → **`patches/bf16/`** |
 | トークナイズの KeyError | `tokenize_anndata` の位置インデックス → **`patches/tokenizer.py`** |

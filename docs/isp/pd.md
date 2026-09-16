@@ -12,7 +12,7 @@
 |---|---|---|
 | データ臓器 | blood, brain, smallint, spleen, liver, BM（+LN 未取得） | **spleen のみ**（script は LN/BM/blood/brain/smallint 分あり） |
 | h5ad / tokenized | 6 臓器完備 | PD_spleen のみ（h5ad 667MB, 83,783 細胞, 24 細胞型, 36 個体） |
-| fine-tune 済み分類器 | 実重みあり | **未完成（0 バイト）** |
+| 微調整済み分類器 | 実重みあり | **未完成（0 バイト）** |
 | ISP 結果 | 複数臓器 | PD_spleen 1 件のみ（85 レコード） |
 | 専用スクリプト | 5 + liver/bm | `07_pd_spleen_early_isp.py` のみ |
 | レポート | 各臓器 .md/.html | `report_pd_spleen.*` のみ |
@@ -26,13 +26,13 @@
 - ユーザ提示の全臓器リスト（blood / brain / smallint / spleen / BM / liver / LN）は
   **AD 用**であり、PD は元から「脾臓 1 臓器」しか入力されていない。
 
-### 2-2. fine-tune 済み分類器が未完成（0 バイト）
+### 2-2. 微調整済み分類器が未完成（0 バイト）
 - `input/PD_spleen/runs/260823_geneformer_cellClassifier_PD_spleen_celltype/` は **8–12 KB**。
   - `ksplit1/config.json`, `ksplit1/model.safetensors` が **すべて 0 バイト**
   - `TRAINED_MODEL_PATH.txt`, `*_pred_dict.pkl` 等も 0 バイト
-- そのため `07_pd_spleen_early_isp.py` は **`model_type="Pretrained"`（未ファインチューン）** で実行。
-  → AD 系の `CellClassifier`（fine-tuned）と非対称で、組織特異シグナルの抽出精度に差がある。
-- `results/tables/adpd_*`（fine-tuned 評価）も **空**（0 バイト）＝ fine-tune 結果が存在しない。
+- そのため `07_pd_spleen_early_isp.py` は **`model_type="Pretrained"`（微調整なし）** で実行。
+  → AD 系の `CellClassifier`（微調整済み）と非対称で、組織特異シグナルの抽出精度に差がある。
+- `results/tables/adpd_*`（微調整済みの評価）も **空**（0 バイト）＝ 微調整の結果が存在しない。
 
 ### 2-3. PD スクリプトの存在状況（2026-08-26 更新）
 
@@ -67,18 +67,18 @@
 
 ## 3. 現在までに実施済みの PD 解析
 
-### PD_spleen（`07_pd_spleen_early_isp.py`, **Fine-tuned CellClassifier**）
+### PD_spleen（`07_pd_spleen_early_isp.py`, **微調整済み CellClassifier**）
 - **state**: `disease` PF(α-syn PFF 注入 = 孤発性 PD) → WT
 - **タイムポイント**: 6m / 9m / 12m を個別評価、6m でランキング
 - **細胞プール**: 脾臓免疫 16 種
 - **遺伝子**: 34（α-syn/PD core + リソソーム + 神経炎症/免疫 + 補体）
 - **結果**: 85 レコード（`results/isp/pd_spleen/pd_spleen_early_isp_stats_combined.csv`）
 
-**2026-08-26 更新: fine-tune 済みで再実行**
-- `06_finetune.py` で PD_spleen を fine-tune → **accuracy 0.9149 / macro F1 0.9079**（28,336 held-out cells）
+**2026-08-26 更新: 微調整済みで再実行**
+- `06_finetune.py` で PD_spleen を微調整 → **accuracy 0.9149 / macro F1 0.9079**（28,336 held-out cells）
 - モデル: `runs/260826_geneformer_cellClassifier_PD_spleen_celltype/ksplit1`（417MB 実重み）
 - `07_pd_spleen_early_isp.py` を Pretrained → **CellClassifier** に変更（`_isp_common.resolve_classifier_dir` 使用）
-- 上位（6m Shift, fine-tuned）: **S100A8 / S100A9 / LYZ / ITGAX / C1QA / TREM1 / IL6 / ITGAM / SNCA**
+- 上位（6m Shift, 微調整済み）: **S100A8 / S100A9 / LYZ / ITGAX / C1QA / TREM1 / IL6 / ITGAM / SNCA**
   - S100A8 +0.0356, S100A9 +0.0221（Pretrained 時 +0.0009/+0.0006 から大幅増強）
 
 ---
@@ -89,12 +89,12 @@
 - [x] Wiki に `docs/isp/pd.md` を新設し現状を記録
 - [x] `experiments.csv` に PD の完成度・欠落を注記
 - [x] 他 PD スクリプト（PD_brain / PD_smallint / combos / null）をローカルから取り込み push
-- [x] **PD_spleen の fine-tune + ISP 再実行（2026-08-26）**
+- [x] **PD_spleen の微調整 + ISP 再実行（2026-08-26）**
 
 ### 優先度 B（データ構築、実行/別 PC 必要）
 - [ ] 他 PD 臓器（blood / brain / LN）データの取得・構築
-- [ ] PD_blood / PD_brain / PD_LN を fine-tune 済みモデルで実行（AD と対称に）
+- [ ] PD_blood / PD_brain / PD_LN を 微調整済みモデルで実行（AD と対称に）
 
 ### 注意（解釈）
-- PD_spleen は **fine-tuned 済み**（2026-08-26 以降）。Pretrained 結果との比較はモデル差に注意。
+- PD_spleen は **微調整済み**（2026-08-26 以降）。Pretrained 結果との比較はモデル差に注意。
 - 脾臓単一臓器・PFF モデルはヒト PD の全容を再現しない。

@@ -18,11 +18,11 @@
 
 | 実験 | 疾患 | 臓器 | スクリプト | モデル | 実施ホスト |
 |---|---|---|---|---|---|
-| `ad_smallint` | AD | 小腸（gut-brain axis） | `07_ad_smallint_early_isp.py` | Fine-tuned CellClassifier | PC-A |
-| `ad_brain` | AD | 脳（ミクログリア） | `07_ad_brain_early_isp.py` | Fine-tuned CellClassifier | PC-A |
-| `ad_blood` | AD | 血液（末梢免疫） | `07_ad_blood_early_isp.py` | Fine-tuned CellClassifier | PC-B |
-| `ad_spleen` | AD | 脾臓（免疫） | `07_ad_spleen_early_isp.py` | Fine-tuned CellClassifier | PC-B |
-| `ad_ln` | AD | リンパ節（CD4+ T テスト） | `07_ad_ln_early_isp.py` | Fine-tuned CellClassifier | ローカル |
+| `ad_smallint` | AD | 小腸（gut-brain axis） | `07_ad_smallint_early_isp.py` | 微調整済み CellClassifier | PC-A |
+| `ad_brain` | AD | 脳（ミクログリア） | `07_ad_brain_early_isp.py` | 微調整済み CellClassifier | PC-A |
+| `ad_blood` | AD | 血液（末梢免疫） | `07_ad_blood_early_isp.py` | 微調整済み CellClassifier | PC-B |
+| `ad_spleen` | AD | 脾臓（免疫） | `07_ad_spleen_early_isp.py` | 微調整済み CellClassifier | PC-B |
+| `ad_ln` | AD | リンパ節（CD4+ T テスト） | `07_ad_ln_early_isp.py` | 微調整済み CellClassifier | ローカル |
 | `pd_spleen` | PD | 脾臓（免疫） | `07_pd_spleen_early_isp.py` | 微調整済み CellClassifier | PC-C |
 | `ad_liver` | AD | 肝臓 | `07e_ad_liver_perturbation.py` | 微調整済み CellClassifier | PC-C |
 | `ad_bm` | AD | 骨髄 | `07f_in_silico_perturbation_AD_BM.py` | 微調整済み CellClassifier | PC-C |
@@ -39,7 +39,7 @@
 > **[PD 多領域アトラスの ISP 実施記録（pd_atlas）](pd_atlas.md)**
 
 > **AD_LN（リンパ節）**: `07_ad_ln_early_isp.py` は CD4+ T 細胞の小規模テスト（CD28/STAT3/FOXP3）。
-> `input/AD_LN` の h5ad/tokenized/fine-tune モデルは未配置（スクリプトのみ）のため、実行にはデータの配置が必要。
+> `input/AD_LN` の h5ad・tokenized・微調整モデルは未配置（スクリプトのみ）のため、実行にはデータの配置が必要。
 > **LN は AD/PD ともスクリプト（AD は本スクリプト）はあるが、データ・レポートは未整備**（PD_LN は `07b_pd_perturbation.py` が命名上の対象、実データなし）。
 
 > 各 PC で作成された script 名・出力先が異なっていたため、本 Wiki と併せて **出力先を統一**し、共通部分を `_isp_common.py` に集約しました（後述）。
@@ -83,7 +83,7 @@ input/<TISSUE>/results/isp/<experiment>/
 | `check_datasets_version()` | datasets>=5 で `perturb_data` ハング警告 |
 | `estimate_perturb_ram()` | `max_ncells` の RAM 見積り |
 | `load_gene_dicts()` | token→ENSG / ENSG→symbol / symbol→ENSG 辞書 |
-| `resolve_classifier_dir()` | ファインチューン済みモデル解決（stale パス / 最新 ksplit fallback） |
+| `resolve_classifier_dir()` | 微調整済みモデル解決（stale パス / 最新 ksplit fallback） |
 | `scan_pool_presence()` / `_per_key()` | 対象プールでの遺伝子発現チェック |
 | `perturb_one_gene()` | 1 遺伝子削除 + `goal_state_shift` 統計（`Shift_to_goal_end` 返却） |
 | `write_combined()` | 全遺伝子結果の結合 CSV 出力（early タイムポイント順位付き） |
