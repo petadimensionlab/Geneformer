@@ -157,11 +157,13 @@ S = {
         ],
         "h4": "4. 文献との照合（争いのある 7 遺伝子）",
         "t2h": ["遺伝子", "検出率", "104M", "316M", "文献の向き（出典）", "文献と一致"],
-        "t2note": "「文献の向き」は、その遺伝子を削除すると病態が改善するのか、悪化するのかを示します。"
+        "t2note": "Shift の値は有効数字 3 桁の指数表記で書いています（例: -5.50e-04）。"
+                  "「文献の向き」は、その遺伝子を削除すると病態が改善するのか、悪化するのかを示します。"
                   "「文献と一致」は、そのモデルが示した向きが文献と合っているかを示します。",
         "h5": "5. 両モデルが文献と食い違う 7 遺伝子",
         "t3h": ["遺伝子", "検出率", "104M", "316M", "文献の向き（出典）"],
-        "t3note": "7 個すべてについて、文献は「削除すると改善する」と報告しています。ところが2つのモデルは"
+        "t3note": "Shift の値は表2と同じく有効数字 3 桁の指数表記です。"
+                  "7 個すべてについて、文献は「削除すると改善する」と報告しています。ところが2つのモデルは"
                   "どちらも負の値を返しました。負は「健常な状態から遠ざかる」という意味です。"
                   "この 7 個は分泌性の炎症メディエーターと補体に偏っており、モデルの選択ではなく"
                   "手法そのものの弱点だと考えられます。",
@@ -226,7 +228,8 @@ S = {
         ],
         "h4": "4. Literature check: the 7 contested genes",
         "t2h": ["Gene", "Detection", "104M", "316M", "Literature direction (source)", "Agrees"],
-        "t2note": "Literature direction = whether deleting the gene improves or worsens the pathology. "
+        "t2note": "Shifts are given in scientific notation with three significant digits (for example -5.50e-04). "
+                  "Literature direction = whether deleting the gene improves or worsens the pathology. "
                   "Agrees = whether that model's sign matches it.",
         "h5": "5. The 7 genes where both models contradict the literature",
         "t3h": ["Gene", "Detection", "104M", "316M", "Literature direction (source)"],
@@ -469,7 +472,7 @@ def build(lang: str) -> Document:
         src = (L["pos"] if r.lit_verdict == "POS" else L["neg"])
         if key_of(r.lit_pmid):
             src += " " + cite(key_of(r.lit_pmid))
-        rows.append([r.gene, f"{r.detection_AD*100:.0f}%", f"{r.shift_104M:+.5f}", f"{r.shift_316M:+.5f}",
+        rows.append([r.gene, f"{r.detection_AD*100:.1f}%", f"{r.shift_104M:+.2e}", f"{r.shift_316M:+.2e}",
                      src, r.better_supported_model])
     table(doc, L["t2h"], rows, widths=[2.0, 1.7, 2.4, 2.4, 5.4, 2.1], font=8.5)
     caption(doc, L["cap_t2"])
@@ -481,7 +484,7 @@ def build(lang: str) -> Document:
         src = (L["pos"] if r.lit_verdict == "POS" else L["neg"])
         if key_of(r.lit_pmid):
             src += " " + cite(key_of(r.lit_pmid))
-        rows.append([r.gene, f"{r.detection_AD*100:.1f}%", f"{r.shift_104M:+.5f}", f"{r.shift_316M:+.5f}", src])
+        rows.append([r.gene, f"{r.detection_AD*100:.1f}%", f"{r.shift_104M:+.2e}", f"{r.shift_316M:+.2e}", src])
     table(doc, L["t3h"], rows, widths=[2.2, 1.8, 2.4, 2.4, 6.2], font=8.5)
     para(doc, L["t3note"], size=9)
 
