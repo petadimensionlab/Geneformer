@@ -25,7 +25,7 @@
 **論文の設計をどう使ったか**
 
 - 5 領域が **Braak PD 病理の皮質下 → 皮質方向の広がり**を捉える。**DMNX と GPI が早期障害**、PMC/PFC が後期、PVC はほぼ温存 → **ISP の細胞プールに DMNX_Neu / GPI_Neu を選定**
-- **α-シヌクレイン（SNCA）/ Lewy 体**が神経病理の中心 → **遺伝子パネルの主軸**
+- **α-シヌクレイン（SNCA）/ Lewy 体**が神経病理の中心 → **遺伝子リストの主軸**
 
 > ⚠️ **この 5 領域に黒質（substantia nigra）は含まれません。** したがって
 > dopaminergic identity 遺伝子（TH, SLC6A3, SLC18A2, DDC）は**全細胞型で <2% の細胞にしか
