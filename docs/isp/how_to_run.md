@@ -53,6 +53,16 @@ IS_TIMEPOINTS=3m IS_MAX_GENES=3 \
 結果の可視化・HTML レポート・officecli 用 PPT プロンプトは `result/report/` にあります
 （各 build / render / visualize スクリプト）。詳細は [README のセクション](../README.md) を参照。
 
+文章としてのレポート（DOCX、日本語と英語）が必要な場合は、`templates/` の雛形を使います。
+
+```bash
+.venv/bin/python templates/template_report_figures.py --lang both
+.venv/bin/python templates/template_build_report_docx.py --lang both
+```
+
+`templates/README_templates_ja.md` に、入力（前段の出力）と実行順、日本語 PDF への変換方法を書いてあります。
+節の並べ方は[レポートの標準構成](report_template.md)、書き方の決まりは[遵守項目](checklist.md) D 章を参照してください。
+
 ## 計算上の注意（必読）
 
 1. **`datasets==4.0.0` に固定**（`>=5` は `perturb_data` がハング）。
