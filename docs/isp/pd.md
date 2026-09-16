@@ -79,7 +79,7 @@
 - モデル: `runs/260826_geneformer_cellClassifier_PD_spleen_celltype/ksplit1`（417MB 実重み）
 - `07_pd_spleen_early_isp.py` を Pretrained → **CellClassifier** に変更（`_isp_common.resolve_classifier_dir` 使用）
 - 上位（6m Shift, 微調整済み）: **S100A8 / S100A9 / LYZ / ITGAX / C1QA / TREM1 / IL6 / ITGAM / SNCA**
-  - S100A8 +0.0356, S100A9 +0.0221（Pretrained 時 +0.0009/+0.0006 から大幅増強）
+  - S100A8 +3.56e-02, S100A9 +2.21e-02（Pretrained 時 +9.00e-04/+6.00e-04 から大幅増強）
 
 ---
 
