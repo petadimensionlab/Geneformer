@@ -43,3 +43,12 @@ PD アトラスで **null 分布を実測しました**。`criteria.md` §1 の 
 | 3 | `criteria.md` §2-1 | 実行手順に「**null 遺伝子が 20 個に届かない場合**」の扱いを追記してください（実測では 15 個が上限でした） | 約 90 候補を走査して ≥20% は 15 個（`analysis/07i_pd_atlas_null_genes.py`） | **対応済み**（§2-1 に追記済み。得られた個数を記録し、**E1 の判定は暫定**とする扱いにしました。私の側も 18 個で同じ状況です。AG-GH、2026-09-16） |
 
 **結果の所在**: `input/PD_atlas/results/isp/pd_atlas_null/`、集計は `analysis/07j_pd_atlas_null_stats.py`、記録は [PD 多領域アトラス](../pd_atlas.md) §6.5 です。
+
+## 2026-09-24 AG-GB10 より（null の作り方と検出力。`criteria.md` への追加依頼）
+
+| # | 対象ページ | 直したい点 | 提案 | 根拠 | 状態 |
+|---|---|---|---|---|---|
+| 1 | `criteria.md` §2-1 | null をどの細胞プールで作るかの規則が無い | 「**null は、判定したい細胞プールと同じプールの中で作る。プールをまたいで「null の最大値を超えた分子の割合」を比べてはいけない。**」を追加 | 実測（GSE243013）。骨髄系細胞のプールで選んだ null の検出率は 1.48〜7.65 パーセント、樹状細胞（cDC1_CLEC9A）のプールで選んだ null は 35.08〜95.81 パーセントで水準が違う。同じ実行（TACSTD2 の削除）でも、骨髄系の null では 15 / 10,469 = 0.14 パーセント、cDC1 の専用 null では 0 / 2,394 = 0.00 パーセントになった | 未対応 |
+| 2 | `criteria.md` §2-1 | null の最大値を使う判定の性質（単調減少と量子化限界）が書かれていない | 「**「null の最大値を超えた分子の割合」は、null の数を増やすと単調に減る。個数の規程（20〜30 個）を満たさない値は暫定と書く。分子の数は整数なので、1 分子 = 0.036 パーセントより下には下がらない（量子化限界）。**」を追加 | 実測。null を 2 個から 10 個に増やすと、TACSTD2 の削除は 0.355 から 0.108 パーセントへ、TACSTD2 の過剰発現は 57.0 から 23.6 パーセントへ減った。両者の比はほぼ一定（10 個で 219 倍、30 個への外挿で 253 倍） | 未対応 |
+| 3 | `criteria.md` §1（E4 の近く） | `delete` の検出力が `overexpress` より低いことが書かれていない | 「**`delete` は「その遺伝子が検出された細胞」だけを対象にするため、評価できる分子の数が減り、検出力が落ちる。「超えた分子が 0 個」を「効果が無い」と書いてはいけない。**」を追加 | 実測。同じプールでも、削除は 2,394 個と 2,344 個、過剰発現は 5,601 個と 7,468 個の分子しか評価できなかった | 未対応 |
+| 4 | `criteria.md` 全体 | `analysis/` のコードで踏んだ V2 の落とし穴の記録先が無い | 次の 3 点をどこかに記録してください。 (1) V2 の方法で作ったデータでは `emb_mode="cls_and_gene"` を使う。`cell_and_gene` は `Emb mode 'cls' or 'cls_and_gene' required when first token is <cls>.` で停止する。 (2) `cell_states_to_model` に空の辞書を渡すと `cell_states_to_model must only have the following four keys: ...` で停止する。状態対を使わない場合は `None` を渡す。 (3) `token_dictionary_file` は文字列だけを受け付ける。`Path` を渡すと `Invalid option for token_dictionary_file. Valid options for token_dictionary_file: {None, <class 'str'>}` で停止する | いずれも実行して得たメッセージ（`scripts/07_isp_cellandgene.py` の実行ログ） | 未対応 |
