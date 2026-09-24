@@ -41,7 +41,7 @@ SOURCES = [
     ("docs/isp/design.md", "図表・スライド・ポスターの視覚設計ルール"),
     ("docs/isp/report_template.md", "レポートの標準構成"),
     ("docs/isp/owners.md", "執筆者名簿とページ担当"),
-    ("docs/isp/requests/README.md", "受信箱の説明"),
+    ("docs/isp/requests/README.md", "付録: 受信箱の記録（2026-09-25 に廃止）"),
     ("docs/isp/conflicts.md", "競合と裁定の記録"),
     ("docs/isp/how_to_run.md", "付録: 再現手順"),
 ]
