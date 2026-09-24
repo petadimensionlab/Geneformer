@@ -12,9 +12,9 @@
 |---|---|---|
 | データ臓器 | blood, brain, smallint, spleen, liver, BM（+LN 未取得） | **spleen のみ**（script は LN/BM/blood/brain/smallint 分あり） |
 | h5ad / tokenized | 6 臓器完備 | PD_spleen のみ（h5ad 667MB, 83,783 細胞, 24 細胞型, 36 個体） |
-| 微調整済み分類器 | 実重みあり | **未完成（0 バイト）** |
+| 微調整済み分類器 | 実重みあり | 実重みあり（2026-08-26 完了、§3 を参照） |
 | ISP 結果 | 複数臓器 | PD_spleen 1 件のみ（85 レコード） |
-| 専用スクリプト | 5 + liver/bm | `07_pd_spleen_early_isp.py` のみ |
+| 専用スクリプト | 5 + liver/bm | PD 用 8 本（§2-3 を参照） |
 | レポート | 各臓器 .md/.html | `report_pd_spleen.*` のみ |
 
 ---
@@ -26,13 +26,15 @@
 - ユーザ提示の全臓器リスト（blood / brain / smallint / spleen / BM / liver / LN）は
   **AD 用**であり、PD は元から「脾臓 1 臓器」しか入力されていない。
 
-### 2-2. 微調整済み分類器が未完成（0 バイト）
+### 2-2. 微調整済み分類器が未完成だった時期（2026-08-26 に解消済み）
 - `input/PD_spleen/runs/260823_geneformer_cellClassifier_PD_spleen_celltype/` は **8–12 KB**。
   - `ksplit1/config.json`, `ksplit1/model.safetensors` が **すべて 0 バイト**
   - `TRAINED_MODEL_PATH.txt`, `*_pred_dict.pkl` 等も 0 バイト
-- そのため `07_pd_spleen_early_isp.py` は **`model_type="Pretrained"`（微調整なし）** で実行。
+- そのため当時は `07_pd_spleen_early_isp.py` を **`model_type="Pretrained"`（微調整なし）** で実行していました。
   → AD 系の `CellClassifier`（微調整済み）と非対称で、組織特異シグナルの抽出精度に差がある。
-- `results/tables/adpd_*`（微調整済みの評価）も **空**（0 バイト）＝ 微調整の結果が存在しない。
+- `results/tables/adpd_*`（微調整済みの評価）も当時は **空**（0 バイト）でした。
+- **2026-08-26 に解消しました。** `06_finetune.py` で微調整が完了し（accuracy 0.9149 / macro F1 0.9079）、
+  実重み（417MB）が得られています。以下 §3 を参照してください。
 
 ### 2-3. PD スクリプトの存在状況（2026-08-26 更新）
 
@@ -59,9 +61,9 @@
 > - **PD_LN**: `07b_pd_perturbation.py` が命名上「LN」を対象にしているが、実データ（`input/PD_LN` / h5ad）は
 >   リポジトリ上に確認できない。
 
-### 2-4. PD 用の Wiki ページが無い
-- 現在 PD の記述は `docs/isp/README.md`（1 行）と `results.md`（1 節）のみ。
-- 本ページ（`docs/isp/pd.md`）を新設し、現状と残タスクを記録。
+### 2-4. PD 用の Wiki ページ（解消済み）
+- 以前は PD の記述が `docs/isp/README.md` と `results.md` だけでした。
+- 本ページ（`docs/isp/pd.md`）を新設し、現状と残タスクを記録しました。
 
 ---
 

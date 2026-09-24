@@ -61,7 +61,7 @@ IS_TIMEPOINTS=3m IS_MAX_GENES=3 \
 ```
 
 `templates/README_templates_ja.md` に、入力（前段の出力）と実行順、日本語 PDF への変換方法を書いてあります。
-節の並べ方は[レポートの標準構成](report_template.md)、書き方の決まりは[遵守項目](checklist.md) D 章を参照してください。
+節の並べ方は[レポートの標準構成](report_template.md)、書き方の決まりは[遵守項目](checklist.md) の C-1（レポートを書くときに守ること）を参照してください。
 
 ## 計算上の注意（必読）
 

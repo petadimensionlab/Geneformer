@@ -134,6 +134,9 @@ input/<TISSUE>/results/isp/<experiment>/
 - [骨髄（ad_bm）](ad_bm.md)
 - [PD の現状・残タスク（pd_spleen）](pd.md)
 - [再現手順（How to run）](how_to_run.md)
+- [PD 多領域アトラス](pd_atlas.md)
+- [レポート設計の変遷（officecli の版ごとの実測）](design.md)
+- [Morabito 2021（snRNA-seq）の要約](ad_morabito2021.md)
 
 各臓器のスクリプト設定（細胞プール・遺伝子リスト・タイムポイント）と結果トップは各ページに記載しています。
 

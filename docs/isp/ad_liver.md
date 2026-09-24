@@ -8,6 +8,8 @@
 ## 設計
 - **state_key = `state_early_ad`**（`disease` + `samples4` から構築）
 - **start = `WT`**（3m 健常 baseline）, **goal = `AD3m`**（最早期の病理シフト）
+  - **注意**: この実験は start と goal が他の実験と逆です（他の実験は start = 疾患、goal = WT）。
+    したがって `Shift_to_goal_end` の符号の読み方も他の実験と逆になります。
 - **alt = `AD6m/AD9m/AD12m`**（進行方向）
 - 対象細胞: Hepatocytes, Kupffer.cells, Ly6c.high Monocytes, Endothelial.cells, Macrophages
 
