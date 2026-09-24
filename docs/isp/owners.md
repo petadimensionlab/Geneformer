@@ -10,10 +10,14 @@ git の著者メールで識別できます（`git log --pretty='%h %ae %s'` で
 
 | 呼び名 | マシン | git の著者メール | 役割 |
 |---|---|---|---|
-| **AG-GB10** | このマシン（ホスト名 `spark-c083`、NVIDIA GB10） | `petadimensionlab@gmail.com` | 文書の索引、チェックリスト、競合の記録、結果ページ、方法ページ、テンプレート、レポート生成 |
+| **AG-GB10** | **2 台**。①NVIDIA GB10（ホスト名 `spark-c083`）②Mac Studio（ホスト名 `ShinjinoMac-Studio.local`、「ShinjiのMac Studio」） | `petadimensionlab@gmail.com` | 文書の索引、チェックリスト、競合の記録、結果ページ、方法ページ、テンプレート、レポート生成 |
 | **AG-MAC** | Mac mini M4 Pro | `petadimensionlab@PetadimensionlabMacMiniM4Pro-3.local` | PD アトラス、用語集、レポート標準構成、記述ルール |
 | **AG-GH** | GitHub の noreply メールを使うマシン（ホスト名は不明） | `petadimensionlab@users.noreply.github.com` | 評価基準、解析コード（`analysis/`）、パッチ（`patches/`） |
 | **Nakaoka さん** | MacBook Pro | `nakaoka@MacBook-Pro-2025Masaharu-Nagayama.local` | 指示と最終判断 |
+
+> **注意（AG-GB10 の 2 台を区別するには）**: 2 台は同じメールでコミットするため、**git の著者メールだけでは区別できません。**
+> 2026-09-25 以前に Mac Studio から出したコミットも、記録上は「AG-GB10」になっています。
+> 区別が必要なときは、commit メッセージの呼び名にマシン名を添えてください（例: `AG-GB10 / Mac Studio`）。
 
 ## 2. ページ担当
 
@@ -32,6 +36,8 @@ git の著者メールで識別できます（`git log --pretty='%h %ae %s'` で
 | [再現手順](how_to_run.md) | AG-GB10 | 実行手順とレポート生成の記載を担当したため |
 | [PD の現状](pd.md) | AG-GB10 | 実行状況の更新を担当したため |
 | [PD 多領域アトラス](pd_atlas.md) | AG-MAC | 記載の書き直しを担当したため |
+| [レポート設計の変遷](design.md) | AG-MAC | ページ側で主担当を AG-MAC と宣言しているため（2026-09-25 追記） |
+| [Morabito 2021 の要約](ad_morabito2021.md) | AG-MAC | 同上（2026-09-25 追記） |
 | [肝臓](ad_liver.md)、[骨髄](ad_bm.md) | AG-GB10 | 結果の記載を担当したため |
 | [索引](README.md) | AG-GB10 | ページ一覧の維持を担当したため |
 | [受信箱](requests/README.md)（`docs/isp/requests/`） | AG-MAC | 仕組みを作ったため |
@@ -79,7 +85,7 @@ commit メッセージに書くだけでは届きません。メッセージは�
 | 文献のセクション別要約（GSE174367） | [Morabito 2021](ad_morabito2021.md) |
 | 誰がどのページを担当するか、依頼の出し方 | このページ（§2、§3） |
 
-## 6. 共有のしかた
+## 5. 共有のしかた
 
 このページを編集したら、[索引（README）](README.md)のページ一覧から辿れるようにしておきます。
 他の執筆者は `git pull` でこのページを読み、担当と受信箱を確認してください。
