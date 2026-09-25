@@ -11,7 +11,7 @@
 ## 共通実行コマンド
 
 ```bash
-# 例: 脾臓 AD
+# 例: <TISSUE を設定>（例: 脾臓の AD）
 GENEFORMER_DIR=geneformer_hf ADPD_TISSUE=AD_spleen \
   .venv/bin/python analysis/07_ad_spleen_early_isp.py
 ```
