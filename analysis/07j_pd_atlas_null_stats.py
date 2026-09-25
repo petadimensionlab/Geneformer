@@ -14,7 +14,9 @@ Reads the null run (pd_atlas_null) and the hypothesis run (pd_atlas) and reports
                          neuron pools, so they cannot be perturbed here and the
                          check cannot be run -> 未検証, not pass or fail.
 
-Reported with the four verdict words only (合格 / 不合格 / 未検証 / 判定不能).
+Reported with the two words that describe what we know (未検証 / 判定不能).
+The measured values are printed beside the criterion; no pass/fail word is used
+(style-guide.md A-3).
 
 Usage:
     .venv/bin/python analysis/07j_pd_atlas_null_stats.py
@@ -114,7 +116,8 @@ def main() -> int:
     print("E3 negative controls: " + ", ".join(
         f"{g} presence {p:.1%}" for g, p in NEG_CONTROLS_PRESENCE.items()))
     print("  both are below the 20% presence rule, so neither can be perturbed in")
-    print("  these pools -> E3 は未検証 (not measurable), not 合格 or 不合格.")
+    print("  these pools -> E3 は未検証 (not measurable). Report the observed")
+    print("  presence fractions; do not write a pass or fail verdict.")
     print("=" * 78)
     return 0
 
