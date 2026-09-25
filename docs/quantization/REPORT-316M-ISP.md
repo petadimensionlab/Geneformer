@@ -52,7 +52,7 @@ fixes in §6.
 
 Matched pair (316M classifier, 24 genes × 3 timepoints × 100 cells):
 
-| scope | n | Spearman ρ | Pearson | sign agreement | top-20 overlap | mean \|Δ\| | max \|Δ\| |
+| scope | n | Spearman rank correlation | Pearson | sign agreement | top-20 overlap | mean \|Δ\| | max \|Δ\| |
 |---|---|---|---|---|---|---|---|
 | **ALL** | 24 | **0.9839** | 0.9928 | 0.944 | **20/20** | 8.3e-05 | 6.3e-04 |
 | 3m | 24 | 0.9835 | — | 0.917 | 20/20 | 9.8e-05 | 4.6e-04 |
@@ -75,8 +75,8 @@ carries no decision. The genes that actually move are ordered identically.
 
 ### Verdict against the planned gate, and why the gate needs revising
 
-`PLAN.md` Phase 2 originally asked for ρ ≥ 0.99, top-20 ≥ 18/20 and sign
-agreement ≥ 98%. Measured: **ρ 0.9839 (fails), top-20 20/20 (passes), sign
+`PLAN.md` Phase 2 originally asked for Spearman's rank correlation ≥ 0.99, top-20 ≥ 18/20 and sign
+agreement ≥ 98%. Measured: **Spearman's rank correlation 0.9839 (fails), top-20 20/20 (passes), sign
 agreement 94.4% (fails)**.
 
 The two failing criteria are the wrong tests for this metric:
@@ -84,7 +84,7 @@ The two failing criteria are the wrong tests for this metric:
 1. **`Shift_to_goal_end` is a difference of two cosines** (`perturb_v_end −
    origin_v_end`), both of which are ≈1. The difference is dominated by
    cancellation, so it carries only ~2-3 significant digits even at fp32. An
-   absolute ρ ≥ 0.99 threshold is not attainable for *any* re-implementation
+   absolute Spearman's rank correlation ≥ 0.99 threshold is not attainable for *any* re-implementation
    while the effect size stays at this scale.
 2. **Sign agreement punishes noise-level rows.** A shift of −2e-05 vs +1e-05 is
    a "disagreement" but is 40x below the median effect and cannot be
@@ -95,7 +95,7 @@ Revised G5 proposal (now the recommended gate):
 | criterion | threshold | measured here |
 |---|---|---|
 | top-N overlap, N=20 | ≥ 18/20 | **20/20** ✓ |
-| Spearman ρ over the run | ≥ 0.98 | **0.9839** ✓ |
+| Spearman rank correlation over the run | ≥ 0.98 | **0.9839** ✓ |
 | sign agreement **above the noise floor** (|Shift| ≥ 3 × median \|Δ\|, here ≈ 2.5e-04) | 100% | **100%** ✓ |
 | report the noise floor | mean \|Δ\| and median \|Δ\| | 8.3e-05 / 5.7e-05 | ✓ |
 
@@ -110,7 +110,7 @@ are not read as biology.
 For reference, the existing 104M fp32 pool run and the 316M bf16 canary — same
 tissue, same 55 genes, same cells, same settings, different model:
 
-| comparison | Spearman ρ | top-20 overlap | mean \|Δ\| | relative to mean \|Shift\| |
+| comparison | Spearman rank correlation | top-20 overlap | mean \|Δ\| | relative to mean \|Shift\| |
 |---|---|---|---|---|
 | **316M bf16 vs 316M fp32** (precision) | 0.9839 | **20/20** | 8.3e-05 | 11% |
 | **316M bf16 vs 104M fp32** (model) | 0.588 | **13/20** | 3.18e-03 | 82% |
@@ -255,7 +255,7 @@ consistent with noise rather than a systematic gain.
 upgrade is *not* a free improvement:
 
 - cell-type classification: indistinguishable (this section),
-- ISP gene ranking: substantially different (top-20 13/20, §4),
+- ISP gene ranking: substantially different (top-20の一致 13/20, §4),
 - cost: 2 h more per tissue for fine-tuning, plus a 316M classifier per tissue,
 - benefit: better MLM loss, which never appears in the pipeline's deliverables.
 

@@ -85,7 +85,7 @@
 
 ### 肝臓 `ad_liver`
 
-> 早期 AD 肝臓の免疫/炎症軸（Kupffer, 単球, マクロファージ, 肝細胞）。WT 3m baseline → AD3m goal、AD6m/9m/12m を alt として 進行方向のシフトを評価。
+> 早期 AD 肝臓の免疫/炎症軸（Kupffer, 単球, マクロファージ, 肝細胞）。WT 3m を start、AD3m を goal とし、AD6m/9m/12m を alt として進行方向の変化を評価しました。
 
 ### 骨髄 `ad_bm`
 

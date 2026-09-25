@@ -72,7 +72,7 @@ torch 2.13.0+cu130、bitsandbytes 0.50.1）での実測に基づいています�
 | [EXPERIMENT.md](EXPERIMENT.md) | EN | 同上（英語版） |
 | [REPORT-316M-ISP-jp.md](REPORT-316M-ISP-jp.md) | JP | V2-316M 分類器 + AD_spleen の ISP canary、G5（fp32 対 bf16）、時間・エネルギー・負荷の比較 |
 | [REPORT-316M-ISP.md](REPORT-316M-ISP.md) | EN | 同上（英語版） |
-| [PLAN.md](PLAN.md) | JP | 量子化の全体計画（目的の整理・フェーズ・合格基準） |
+| [PLAN.md](PLAN.md) | JP | 量子化の全体計画（目的の整理・フェーズ・基準） |
 | [STAGES.md](STAGES.md) | JP | 段階ごとの影響（tokenization / embedding / ISP / fine-tuning） |
 | [PREQUANT-VS-LOADTIME.md](PREQUANT-VS-LOADTIME.md) | JP | 事前量子化とロード時量子化の比較 |
 | [PLAN-316M-128GB.md](PLAN-316M-128GB.md) | JP | V2-316M を 128GB のマシンで動かす計画 |
@@ -87,7 +87,7 @@ torch 2.13.0+cu130、bitsandbytes 0.50.1）での実測に基づいています�
    （精度低下は測定できないレベル）。
 2. **int8 は安全ですが bf16 より遅い**です（fp32 の1.6〜1.7倍）。
    bf16 が使えない環境か、配布物のサイズ削減のときだけ使います。
-3. **4bit(nf4) は遺伝子の順位を変えます**（top-100 の一致 87/100）。
+3. **4bit(nf4) は遺伝子の順位を変えます**（top-100の一致 87/100）。
    遺伝子ランキングが成果物になる in silico perturbation では使えません。
 4. **セル数や遺伝子数を増やしても int4/int8 は有利になりません** —
    batch 8〜256 で速さはほぼ一定、batch 256 での bf16 と nf4 のメモリ差は 0.12 GiB。

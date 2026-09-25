@@ -191,7 +191,7 @@ batch 8, seq len 4096, 25 labels (gradient checkpointing = "qc"):
 | fine-tuning | forward + backward | training steps | **negative** | **bf16 + gradient checkpointing** |
 
 Details and the full accuracy gate design (7 criteria, including ISP
-Spearman ρ ≥ 0.99 and top-20 overlap ≥ 18/20) are in
+Spearman rank correlation ≥ 0.99 and top-20 overlap ≥ 18/20) are in
 [STAGES.md](STAGES.md) and [PLAN.md](PLAN.md) (Japanese).
 
 ## 9. Pre-quantized weights vs quantizing at load time
@@ -313,11 +313,11 @@ rather than on synthetic batches:
 | fine-tune, 1 epoch (3,057 steps) | **1 h 59 m 46 s, 137.5 Wh** | ≈8 h *(extrapolated)* | ~4.0x |
 
 Rank agreement of the matched pair (same 316M checkpoint, only dtype differs):
-**Spearman ρ = 0.9839, top-20 overlap 20/20**, mean |Δ| = 8.3e-05 against a mean
+**Spearman rank correlation = 0.9839, top-20 overlap 20/20**, mean |Δ| = 8.3e-05 against a mean
 |Shift| of 7.5e-04. All 4 sign flips sit in the smallest shifts
 (|Shift| < 2.1e-04); above the median |Shift| there are **zero** flips. So bf16
 changes only the part of the ranking that carries no decision. The
-model change (104M fp32 → 316M bf16) is a different story: ρ = 0.588, top-20
+model change (104M fp32 → 316M bf16) is a different story: Spearman's rank correlation = 0.588, top-20
 13/20, mean |Δ| = 3.2e-03 (82% of the signal).
 
 On cell-type classification the 316M classifier turns out to be a **tie with
@@ -326,10 +326,10 @@ held-out cells; 11 of 25 classes improved, concentrated in low-support classes).
 So the model upgrade buys nothing on that task while changing the ISP ranking —
 it has to be justified biologically, whereas bf16 needs no justification at all.
 
-Consequence for the gate in `PLAN.md` Phase 2: an absolute ρ ≥ 0.99 and a 98%
+Consequence for the gate in `PLAN.md` Phase 2: an absolute Spearman's rank correlation ≥ 0.99 and a 98%
 sign agreement are **not attainable for `Shift_to_goal_end`**, because the metric
 is a difference of two ≈1 cosines and therefore carries only 2-3 significant
-digits. Use top-N overlap, ρ ≥ 0.98, and sign agreement restricted to genes
+digits. Use top-N overlap, Spearman's rank correlation ≥ 0.98, and sign agreement restricted to genes
 above the measured noise floor (3 × median |Δ|). Details and the full tables:
 [REPORT-316M-ISP.md](REPORT-316M-ISP.md).
 

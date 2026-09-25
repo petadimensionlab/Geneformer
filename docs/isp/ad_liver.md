@@ -7,7 +7,7 @@
 
 ## 設計
 - **state_key = `state_early_ad`**（`disease` + `samples4` から構築）
-- **start = `WT`**（3m 健常 baseline）, **goal = `AD3m`**（最早期の病理シフト）
+- **start = `WT`**（3m の健常）、**goal = `AD3m`**（最早期の病理変化）
   - **注意**: この実験は start と goal が他の実験と逆です（他の実験は start = 疾患、goal = WT）。
     したがって `Shift_to_goal_end` の符号の読み方も他の実験と逆になります。
 - **alt = `AD6m/AD9m/AD12m`**（進行方向）
@@ -23,7 +23,7 @@ input/AD_liver/results/isp/ad_liver/ad_liver_early_isp_summary.csv
 ```
 
 ## 解釈
-WT 3m から AD3m への**最早期シフト**を goal にする設計。肝臓の免疫（Kupffer/単球/
+WT 3m から AD3m への**最早期の変化**を goal にする設計。肝臓の免疫（Kupffer/単球/
 マクロファージ）と肝細胞の脂質（APOE/FAR1）・炎症軸が早期 AD の病態形成に関与するとの仮説に基づく。
 
 ## 実行
