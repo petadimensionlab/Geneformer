@@ -1,7 +1,14 @@
 # PD（パーキンソン病）in silico perturbation — 現状と整理
 
-> PD の in silico perturbation は **AD に比べて完成度が大幅に低く**、リポジトリ上に
-> **データ・モデル・スクリプト・結果のすべてが「1 臓器分」しか揃っていません**。
+> **PD の解析は 2 系統あります。混同しないでください。**
+>
+> | 系統 | データ | モデル | null 比較 | 記録 |
+> |---|---|---|---|---|
+> | **マウス脾臓**（本ページ） | `PD_spleen`（PFF 注入） | 微調整済み V2-104M | **未実施** | このページと [結果のまとめ](results.md) |
+> | **ヒト 5 領域** | 公開 snRNA-seq アトラス（97 ドナー） | V2-316M | **完走**（null と区別できず） | [PD 多領域アトラス](pd_atlas.md) |
+>
+> 本ページは**マウス脾臓 1 臓器**の現状です。PD の in silico perturbation は **AD に比べて完成度が大幅に低く**、
+> リポジトリ上に**データ・モデル・スクリプト・結果のすべてが「1 臓器分」しか揃っていません**。
 > ここでは現状を正確に記録し、AD と揃えるための残タスクを整理します。
 
 ---
@@ -80,8 +87,10 @@
 - `06_finetune.py` で PD_spleen を微調整 → **accuracy 0.9149 / macro F1 0.9079**（28,336 held-out cells）
 - モデル: `runs/260826_geneformer_cellClassifier_PD_spleen_celltype/ksplit1`（417MB 実重み）
 - `07_pd_spleen_early_isp.py` を Pretrained → **CellClassifier** に変更（`_isp_common.resolve_classifier_dir` 使用）
-- 上位（6m Shift, 微調整済み）: **S100A8 / S100A9 / LYZ / ITGAX / C1QA / TREM1 / IL6 / ITGAM / SNCA**
-  - S100A8 +3.56e-02, S100A9 +2.21e-02（Pretrained 時 +9.00e-04/+6.00e-04 から大幅増強）
+- 実測の上位（6m、微調整済み）: **S100A8 +3.56e-02、S100A9 +2.21e-02、LYZ +1.18e-02**（Pretrained 時の +9.00e-04 / +6.00e-04 から増強）
+  - **この実行では null 比較をしていません。** したがって**この順位を介入候補の根拠にはできません**
+    （[記述ルール](style-guide.md) §A-5）。順位を主張するには、[方法と共通設定](methods.md) §8 の
+    順位合わせと検出率補正を適用した null 比較が必要です
 
 ---
 
@@ -98,5 +107,7 @@
 - [ ] PD_blood / PD_brain / PD_LN を 微調整済みモデルで実行（AD と対称に）
 
 ### 注意（解釈）
-- PD_spleen は **微調整済み**（2026-08-26 以降）。Pretrained 結果との比較はモデル差に注意。
-- 脾臓単一臓器・PFF モデルはヒト PD の全容を再現しない。
+- PD_spleen は **微調整済み**（2026-08-26 以降）。Pretrained 結果との比較はモデル差に注意してください。
+- **PD_spleen は null 比較が未実施です**（順位を主張できない最大の理由）。ヒト 5 領域の
+  [PD 多領域アトラス](pd_atlas.md) では実施し、**null 遺伝子と区別できませんでした**。
+- 脾臓単一臓器・PFF モデルはヒト PD の全容を再現しません。
