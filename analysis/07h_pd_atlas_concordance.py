@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Cross-pool concordance for the PD multi-region atlas ISP run (docs/isp/pd_atlas.md §6.3).
+"""Cross-pool concordance for the PD multi-region atlas ISP run (docs/isp/records/pd_atlas.md §6.3).
 
 Question: do the genes that move most in one neuron pool move the same way in the
 other? If the rankings disagree, a per-pool "top gene" is not a reproducible

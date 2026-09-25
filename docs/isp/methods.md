@@ -6,7 +6,7 @@
 
 Geneformer 公式チュートリアル（`examples/in_silico_perturbation.ipynb`）に従い、以下 3 ステップで実施：
 
-1. **状態 embedding 抽出** — `EmbExtractor.get_state_embs()` で、疾患（AD/PF）と健常（WT）の状態 embedding を計算（タイムポイントごとに 1 回、全遺伝子で共有）。
+1. **状態 embedding 抽出** — `EmbExtractor.get_state_embs()` で、疾患状態と健常状態の embedding を計算（タイムポイントごとに 1 回、全遺伝子で共有）。
 2. **仮想遺伝子削除** — `InSilicoPerturber.perturb_data()` で 1 遺伝子ずつ `delete` した変異細胞 embedding を生成。
 3. **統計** — `InSilicoPerturberStats.get_stats()`（`mode="goal_state_shift"`）で `Shift_to_goal_end` を算出。
 
@@ -20,12 +20,12 @@ Geneformer 公式チュートリアル（`examples/in_silico_perturbation.ipynb`
 | `cell_emb_style` | `mean_pool` | |
 | `model_version` | `"V2"` | Geneformer V2 |
 | `state_key` | `"disease"` | 状態列 |
-| `start_state` | `AD` / `PF` | 疾患状態 |
+| `start_state` | 疾患の状態名 | 動かしたい側 |
 | `goal_state` | `WT` | 健常状態 |
 | `alt_states` | `[]` | 通常は空 |
 | `emb_layer` | `0` | |
 | `summary_stat` | `"exact_mean"` | |
-| `forward_batch_size` | `64`（liver は 20） | |
+| `forward_batch_size` | `64`（実行によっては小さくします） | |
 | `max_ncells` | `200-300`（`IS_MAX_CELLS`） | perturb 時の細胞数上限 |
 | `emb_max_ncells` | `1000`（`IS_EMB_CELLS`） | 状態 embedding 細胞数 |
 
@@ -163,7 +163,7 @@ c(p, g) = (1 / |C_g|) * Σ_{cell in C_g} cos( x_g^orig , x_g^pert )
 | 検出率の下限 | `d(n) >= D` | 解析ごとに決めて記録します。実行した値は 0.55 でした |
 | 除外 | `n != t`、対象の上位 50 位以内、既知のドライバー | 応答そのものや仮説のある遺伝子を null にしません |
 
-**検出率の下限は状況で変わります。実測では 0.60 では TROP2 の候補が 156 個しか残らず、
+**検出率の下限は状況で変わります。実測では 0.60 では候補が 156 個しか残らず、
 0.55 に緩めて **240 個**を確保しました（両パネルで同じ値を使ってください。そうしないと計数 `k` を比べられません）。**
 検出率は対象（100%）と一致しません。この差は §8-4 の回帰で補正します。
 **パネル（細胞プール）ごとに選び直します。** 同じ遺伝子でも、細胞プールが変われば検出率と順位位置が変わります。

@@ -11,7 +11,7 @@ git の著者メールで識別できます（`git log --pretty='%h %ae %s'` で
 | 呼び名 | マシン | git の著者メール | 役割 |
 |---|---|---|---|
 | **AG-GB10** | **2 台**。①NVIDIA GB10（ホスト名 `spark-c083`）②Mac Studio（ホスト名 `ShinjinoMac-Studio.local`、「ShinjiのMac Studio」） | `petadimensionlab@gmail.com` | 文書の索引、チェックリスト、競合の記録、結果ページ、方法ページ、テンプレート、レポート生成 |
-| **AG-MAC** | Mac mini M4 Pro | `petadimensionlab@PetadimensionlabMacMiniM4Pro-3.local` | PD アトラス、用語集、レポート標準構成、記述ルール |
+| **AG-MAC** | Mac mini M4 Pro | `petadimensionlab@PetadimensionlabMacMiniM4Pro-3.local` | **編集はしません**（2026-09-25 まで分担して編集していました。現在は AG-GH の役割をこのマシンで実行しています） |
 | **AG-GH** | GitHub の noreply メールを使うマシン（ホスト名は不明） | `petadimensionlab@users.noreply.github.com` | 評価基準、解析コード（`analysis/`）、パッチ（`patches/`） |
 | **Nakaoka さん** | MacBook Pro | `nakaoka@MacBook-Pro-2025Masaharu-Nagayama.local` | 指示と最終判断 |
 
@@ -80,7 +80,7 @@ git の著者メールで識別できます（`git log --pretty='%h %ae %s'` で
 | 視覚設計（レイアウト、文字サイズ、色、余白、内容の密度、階層） | [図表・スライド・ポスターの視覚設計ルール](design.md) |
 | 実行の手順（再現方法） | [再現手順](how_to_run.md) |
 | レポートの節立てと体裁 | [レポートの標準構成](report_template.md) |
-| 文献のセクション別要約（GSE174367） | [Morabito 2021](ad_morabito2021.md) |
+| 文献のセクション別要約 | [文献の要約](records/ad_morabito2021.md) |
 | 誰がどのページを担当するか、依頼の出し方 | このページ（§2、§3） |
 
 ## 5. 共有のしかた

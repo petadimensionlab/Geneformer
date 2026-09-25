@@ -89,7 +89,7 @@
 - `07_pd_spleen_early_isp.py` を Pretrained → **CellClassifier** に変更（`_isp_common.resolve_classifier_dir` 使用）
 - 実測の上位（6m、微調整済み）: **S100A8 +3.56e-02、S100A9 +2.21e-02、LYZ +1.18e-02**（Pretrained 時の +9.00e-04 / +6.00e-04 から増強）
   - **この実行では null 比較をしていません。** したがって**この順位を介入候補の根拠にはできません**
-    （[記述ルール](style-guide.md) §A-5）。順位を主張するには、[方法と共通設定](methods.md) §8 の
+    （[記述ルール](../style-guide.md) §A-5）。順位を主張するには、[方法と共通設定](../methods.md) §8 の
     順位合わせと検出率補正を適用した null 比較が必要です
 
 ---

@@ -1,9 +1,10 @@
-# In Silico Perturbation Wiki — 早期疾患（AD/PD）発症因子の仮想遺伝子削除スクリーニング
+# ISP のルールブック（索引）
 
-> この Wiki は、Geneformer による **in silico perturbation（遺伝子仮想削除）** を複数臓器・複数 PC で実施した際の **スクリプト・出力先・実施結果** を整理したものです。
-> 出力先を統一した命名規則・共通リファクタ（`analysis/_isp_common.py`）・各臓器の設定と結果をまとめています。
+> **このページ群は「ISP（in silico perturbation）解析の規則」を置く場所です。**
+> 規則は**個別の実行に依存しない形**で書きます。実行ごとの結果・解釈・実測値は
+> **[実行の記録](#2-実行の記録規則ではない)**に置きます。両者を混ぜないでください。
 
-> ⛔ **作業を始める前に、必ず [記述ルール（用語・表現）](style-guide.md) を読んでください。**
+> ⛔ **作業を始める前に、必ず [記述ルール](style-guide.md) を読んでください。**
 > 用語、表記、判定の語彙の唯一の基準です。読む順序は次のとおりです。
 >
 > | 順 | 文書 | 何が書いてあるか |
@@ -11,62 +12,55 @@
 > | **1** | **[記述ルール](style-guide.md)** | **A データ分析、B 技術・コード、C 共通（表現と表記）。書き方の唯一の基準** |
 > | 2 | [評価基準](criteria.md) | 数値の基準（E1〜E6）と根拠の種類（A・B・C） |
 > | 3 | [用語と手法の定義](glossary.md) | 用語の意味 |
-> | 4 | [遵守項目](checklist.md) | 実行時の行動規範 |
-> | 5 | [レポートの標準構成](report_template.md) | レポートの節立て |
-> | 6 | [執筆者名簿とページ担当](owners.md) | 担当ページ（**2026-09-25 に AG-GH 1 名へ一本化**） |
+> | 4 | [方法と共通設定](methods.md) | 操作と統計量の定義、null 分布の数式 |
+> | 5 | [遵守項目](checklist.md) | 実行時の行動規範 |
+> | 6 | [レポートの標準構成](report_template.md) | レポートの節立て |
+> | 7 | [図表の視覚設計ルール](design.md) | スライドとポスターのレイアウト・文字サイズ・密度 |
+> | 8 | [再現手順](how_to_run.md) | 実行の手順 |
+> | 9 | [執筆者名簿とページ担当](owners.md) | 誰が編集するか（**2026-09-25 に AG-GH 1 名へ一本化**） |
+> | 10 | [競合の記録](conflicts.md) | 競合と裁定の記録（規則を変えた理由の記録でもあります） |
 >
 > 記述が食い違ったときは、勝手に上書きせず [競合の記録](conflicts.md) に追記してください。
 
 ---
 
-## 1. 概要
+## 1. 規則（このページ群）
 
-**目的**: アルツハイマー病（AD）/ パーキンソン病（PD）の **早期発見・早期発症因子** を、単細胞トランスクリプトームから探索する。
+| 文書 | 何が書いてあるか |
+|---|---|
+| [記述ルール](style-guide.md) | 用語、表現、数値の表記、根拠の種類、判定の語彙、リポジトリ操作 |
+| [評価基準](criteria.md) | 何をもって成功��するか（E1〜E6）、基準の作り方、実行前後の手順 |
+| [用語と手法の定義](glossary.md) | トークン化・埋め込み・`Shift_to_goal_end` の式・ノイズ床・状態分離 |
+| [方法と共通設定](methods.md) | 操作と統計量の定義、null 分布の数式、共通パラメータ |
+| [遵守項目](checklist.md) | ���行時の行動規範（解析前・解釈・文献・文書・運用） |
+| [レポートの標準構成](report_template.md) | レポートの節立て（背景 → 目的 → 問い → プロセス → 結果 → 解釈） |
+| [視覚設計ルール](design.md) | スライドとポスターの視覚設計の規則（出典つき） |
+| [再現手順](how_to_run.md) | 実行の手順 |
+| [執筆者名簿](owners.md) | 誰が編集するか、規則の置き場所 |
+| [競合の記録](conflicts.md) | 競合の経緯と裁定、旧節番号の対応 |
 
-**手法**: Geneformer V2-104M の埋め込み表現を用いて、**疾患状態の細胞から 1 遺伝子を仮想的に削除（delete）** し、その embedding が **健常（WT）状態へどれだけ近づくか**（`Shift_to_goal_end`）を評価。
+## 2. 実行の記録（規則ではない）
 
-- `Shift_to_goal_end > 0`（正）: 削除で疾患細胞が WT に近づく = **早期駆動因子 / 介入標的候補**
-- `Shift_to_goal_end < 0`（負）: 削除で WT から離れる = **健常状態の維持因子**
+| 記録 | 何が書いてあるか |
+|---|---|
+| [結果のまとめ](records/results.md) | 実行ごとの結果と解釈、**基準の根拠になった実測**、限界 |
+| [PD の現状](records/pd.md) | PD の実施状況と残タスク |
+| [PD 多領域アトラス](records/pd_atlas.md) | ヒト多領域アトラスの実施記録（null 比較を含む） |
+| [肝臓](records/ad_liver.md)、[骨髄](records/ad_bm.md) | 個別の実行の記録 |
+| [文献の要約](records/ad_morabito2021.md) | 文献のセクション別要約 |
+| [視覚設計の適用記録](records/design_record.md) | ポスターに規則を当てたときの実測（版ごとの検証） |
 
-**ISP の信号の大きさは、状態分離に律速されます。** GSE174367 のミクログリアで、状態分離を 8.92% から
-17.20%（1.93 倍）に広げると、同じ遺伝子の Shift が 1.19e-04 から 3.43e-04（2.9 倍）になり、
-初めて基準を通過しました（AG-GH の実測）。
+**規則と記録の分け方**
 
-### 対象臓器と実施 PC（3 台で並行実施）
-
-| 実験 | 疾患 | 臓器 | スクリプト | モデル | 実施ホスト |
-|---|---|---|---|---|---|
-| `ad_smallint` | AD | 小腸（gut-brain axis） | `07_ad_smallint_early_isp.py` | 微調整済み CellClassifier | PC-A |
-| `ad_brain` | AD | 脳（ミクログリア） | `07_ad_brain_early_isp.py` | 微調整済み CellClassifier | PC-A |
-| `ad_blood` | AD | 血液（末梢免疫） | `07_ad_blood_early_isp.py` | 微調整済み CellClassifier | PC-B |
-| `ad_spleen` | AD | 脾臓（免疫） | `07_ad_spleen_early_isp.py` | 微調整済み CellClassifier | PC-B |
-| `ad_ln` | AD | リンパ節（CD4+ T テスト） | `07_ad_ln_early_isp.py` | 微調整済み CellClassifier | ローカル |
-| `pd_spleen` | PD | 脾臓（免疫） | `07_pd_spleen_early_isp.py` | 微調整済み CellClassifier | PC-C |
-| `ad_liver` | AD | 肝臓 | `07e_ad_liver_perturbation.py` | 微調整済み CellClassifier | PC-C |
-| `ad_bm` | AD | 骨髄 | `07f_in_silico_perturbation_AD_BM.py` | 微調整済み CellClassifier | PC-C |
-| `pd_atlas` | PD | **脳 5 領域**（DMNX/GPI/PMC/PFC/PVC） | `07g_pd_atlas_perturbation.py` | 微調整済み CellClassifier（**部分エポック 31%**） | macminim4pro（M4 Pro, 64 GiB） |
-
-> **PD の完成度は AD より低い**（pd_spleen は脾臓のみ）。pd_spleen は 2026-08-26 に微調整が完了
-> （accuracy 0.915）し、ISP を再実行済みです。
-> 詳細は **[PD の現状・残タスク（pd_spleen）](pd.md)** を参照。
->
-> **`pd_atlas` は別系統**: 公開ヒト snRNA-seq アトラス（Prashant et al. 2024, *Sci Data*、
-> 2,096,155 nuclei / 97 ドナー / 5 領域）を入力にした PD 脳解析です。標準の pd_spleen とは
-> データもスクリプトも異なります。**ISP は完了、微調整は部分エポック（31%）** —
-> 数値を引用する前に「言えないこと」を確認してください:
-> **[PD 多領域アトラスの ISP 実施記録（pd_atlas）](pd_atlas.md)**
-
-> **AD_LN（リンパ節）**: `07_ad_ln_early_isp.py` は CD4+ T 細胞の小規模テスト（CD28/STAT3/FOXP3）。
-> `input/AD_LN` の h5ad・tokenized・微調整モデルは未配置（スクリプトのみ）のため、実行にはデータの配置が必要。
-> **LN は AD/PD ともスクリプト（AD は本スクリプト）はあるが、データ・レポートは未整備**（PD_LN は `07b_pd_perturbation.py` が命名上の対象、実データなし）。
-
-> 各 PC で作成された script 名・出力先が異なっていたため、本 Wiki と併せて **出力先を統一**し、共通部分を `_isp_common.py` に集約しました（後述）。
+- 規則ページには**実行に依存しないこと**を書きます。**実測値は書きません**（実行ごとに変わるため）。
+- 記録ページには**実行ごとの測定値・判定・出所**を書きます。規則を書き換えません。
+- 迷ったら、[執筆者名簿](owners.md) §4 の「内容ごとの正典」に従います。
 
 ---
 
-## 2. 出力先の統一（命名規則）
+## 3. 出力先の命名規則（規則）
 
-3 台の PC で出力先（`input/<TISSUE>/results/isp/` 配下）がバラバラだったため、**以下の共通規則**に統一しました。
+各マシンで出力先が異なっていたため、次の規則に統一しました。**新しい実行はこの形にしてください。**
 
 ```
 input/<TISSUE>/results/isp/<experiment>/
@@ -75,77 +69,45 @@ input/<TISSUE>/results/isp/<experiment>/
     <timepoint>/<Gene>/isp_stats.csv             # 各遺伝子の raw 統計
 ```
 
-`<experiment>` は **`<disease>_<tissue>` の小文字**（`ad_spleen`, `pd_spleen`, `ad_blood`, `ad_smallint`, `ad_brain`, `ad_liver`, `ad_bm`）。
+`<experiment>` は **`<disease>_<tissue>` の小文字**です（例: `<疾患>_<臓器>` の形）。
 
-| 旧パス（PC 別） | 新パス（統一） |
-|---|---|
-| `results/isp/early_ad` | `results/isp/ad_smallint` |
-| `results/isp/early_ad_microglia` | `results/isp/ad_brain` |
-| `results/isp/early_ad_blood` | `results/isp/ad_blood` |
-| `results/isp/early_ad_spleen` | `results/isp/ad_spleen` |
-| `results/isp/early_pd` | `results/isp/pd_spleen` |
-| `results/isp/` (直置き) | `results/isp/ad_liver` |
-| `results/isp/` (直置き) | `results/isp/ad_bm` |
-
-**対応スクリプト** `analysis/_isp_common.py` の `resolve_experiment()` / `isp_dir_for()` / `combined_csv_path()` がこの規則を返します。
+**対応スクリプト** `analysis/_isp_common.py` の `resolve_experiment()` / `isp_dir_for()` /
+`combined_csv_path()` ���この規則を返します。
 
 ---
 
-## 3. 共通リファクタ（`analysis/_isp_common.py`）
+## 4. 共通リファクタ（`analysis/_isp_common.py`）
 
-各臓器スクリプトに重複していた以下を集約しました。
+各実行のスクリプトに重複していた処理を集約しました。
 
 | 関数 | 役割 |
 |---|---|
-| `warn_if_multiproc()` | nproc>1 の警告（datasets<5 前提） |
-| `check_datasets_version()` | datasets>=5 で `perturb_data` ハング警告 |
+| `warn_if_multiproc()` | nproc>1 の警告（`datasets<5` 前提） |
+| `check_datasets_version()` | `datasets>=5` で `perturb_data` がハングする警告 |
 | `estimate_perturb_ram()` | `max_ncells` の RAM 見積り |
 | `load_gene_dicts()` | token→ENSG / ENSG→symbol / symbol→ENSG 辞書 |
-| `resolve_classifier_dir()` | 微調整済みモデル解決（stale パス / 最新 ksplit fallback） |
+| `resolve_classifier_dir()` | 微調整済みモデルの解決（stale パス / 最新 ksplit fallback） |
 | `scan_pool_presence()` / `_per_key()` | 対象プールでの遺伝子発現チェック |
-| `perturb_one_gene()` | 1 遺伝子削除 + `goal_state_shift` 統計（`Shift_to_goal_end` 返却） |
-| `write_combined()` | 全遺伝子結果の結合 CSV 出力（early タイムポイント順位付き） |
+| `perturb_one_gene()` | 1 遺伝子削除と `goal_state_shift` 統計（`Shift_to_goal_end` を返す） |
+| `write_combined()` | 全遺伝子結果の結合 CSV 出力（タイムポイント順位つき） |
 
 ---
 
-## 4. メソッド共通点
+## 5. 実行時の共通設定（規則）
 
-- **state_key = `disease`**, start = `AD`（または `PF`）, goal = `WT`
-- **perturb_type = `delete`**, `combos=0`, `emb_mode="cls"`, `model_version="V2"`
-- **1 遺伝子ずつ**削除（combos=0 でリストを渡すと全遺伝子同時保持条件になり細胞が空になるため）
-- 状態 embedding はタイムポイントごとに 1 回計算し、全遺伝子で共有
-- `nproc=1`（veri-stable）, `datasets==4.0.0`（>=5 は `perturb_data` がハング）
+- **1 遺伝子ずつ**削除します（`combos=0`。リストを渡すと「全遺伝子を同時に持つ細胞」条件になり細胞が空になります）
+- **`perturb_type = delete`**、`emb_mode="cls"`、`model_version="V2"`
+- 状態 embedding はタイムポイントごとに 1 回計算し、全遺伝子で共有します
+- **`nproc=1`**（安定）、**`datasets==4.0.0`**（`>=5` は `perturb_data` がハングします）
 
----
-
-## 5. ページ一覧
-
-- **[遵守項目（チェックリスト）](checklist.md)** — 解析前・解釈・文献・文書・リポジトリ運用で守る項目を1枚に集約
-- **[執筆者名簿とページ担当](owners.md)** — 主担当は AG-GH 1 名（2026-09-25 に一本化）。名簿には AG-GB10（2 台のマシン）、AG-MAC、AG-GH と Nakaoka さんを記載しています。
-- **[受信箱（廃止）](requests/README.md)** — 担当外のページへの依頼の置き場でした。**2026-09-25 に担当を AG-GH 1 名に一本化し、廃止しました。** ファイルは過去の記録として残します。
-- **[競合の記録](conflicts.md)** — 3名が同時に書いたために起きた競合と裁定の**唯一の記録**（git の競合、push の拒否、重複と裁定、旧節番号の対応）。
-- **[記述ルール](style-guide.md)** — **最初にこれ。** A はデータ分析（用語、根拠の種類、判定の語彙、基準と目安）、B は技術とコード保守（置き場所、パッチ、リポジトリ操作）、C は共通の表現と数値の表記。書き方で迷ったときの唯一の基準
-- **[評価基準（解析前に必ず確認）](criteria.md)** — 何をもって成功とするか（E1〜E6）、実行前チェックリスト、実際に起きた失敗の記録
-- **[用語と手法の定義](glossary.md)** — トークン化・埋め込み・`Shift_to_goal_end` の式・ノイズ床・状態分離の意味
-- **[レポート標準構成](report_template.md)** — 背景→目的→問い→プロセス→結果→解釈（目的と方法のズレを点検できる形）
-- [方法・共通設定（詳細）](methods.md) — 共通パラメータと環境変数。**§7 は操作と統計量の用語定義（移動度、検出率、対照遺伝子、対照の水準、null 分布、z・p・q 値）、§8 は null 分布の数学的な定義**（順位合わせ、検出率補正、Benjamini–Hochberg 法、要約統計量）
-- [実行結果のまとめ](results.md)
-- [肝臓（ad_liver）](ad_liver.md)
-- [骨髄（ad_bm）](ad_bm.md)
-- [PD の現状・残タスク（pd_spleen）](pd.md)
-- [再現手順（How to run）](how_to_run.md)
-- [PD 多領域アトラス](pd_atlas.md)
-- [レポート設計の変遷（officecli の版ごとの実測）](design.md)
-- [Morabito 2021（snRNA-seq）の要約](ad_morabito2021.md)
-
-各臓器のスクリプト設定（細胞プール・遺伝子リスト・タイムポイント）と結果トップは各ページに記載しています。
+詳細と環境変数は [方法と共通設定](methods.md) と [再現手順](how_to_run.md) にあります。
 
 ---
 
-## 6. 結果データの場所
+## 6. 成果物の置き場所（規則）
 
-統一後の結果 CSV（実計算値）は Git にコミットせず、ローカルの
-`input/<TISSUE>/results/isp/<experiment>/<experiment>_early_isp_stats_combined.csv`
-にあります（`.gitignore` 対象）。
+統一後の結果 CSV（実計算値）は **Git にコミットしません**。ローカルの
+`input/<TISSUE>/results/isp/<experiment>/<experiment>_early_isp_stats_combined.csv` にあります（`.gitignore` 対象）。
 
-レポート用に整形したデータは `result/report/data/` に、図は `result/report/figures/` にあります（いずれも計算成果物のため Git 対象外）。実行スクリプト・Wiki・レポートテンプレートは Git 追跡対象です。
+レポート用に整形したデータは `result/report/data/`、図は `result/report/figures/` にあります
+（いずれも計算成果物のため Git 対象外）。**実行スクリプト・このページ群・レポートテンプレートは Git 追跡対象です。**

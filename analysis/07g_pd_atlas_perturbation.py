@@ -96,7 +96,7 @@ POOLS = [p.strip() for p in os.environ.get("IS_POOLS", "DMNX_Neu,GPI_Neu").split
 
 # The gene list can be swapped without editing this file (IS_GENES=A,B,C). That is
 # how the null distribution is produced: same engine, same conditions, genes
-# chosen to be unrelated to PD (see docs/isp/pd_atlas.md for the candidate list
+# chosen to be unrelated to PD (see docs/isp/records/pd_atlas.md for the candidate list
 # and the presence fractions that decided the final set).
 _GENES_ENV = [g.strip() for g in os.environ.get("IS_GENES", "").split(",") if g.strip()]
 _GENES_DEFAULT = [
